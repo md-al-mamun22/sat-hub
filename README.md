@@ -1,52 +1,38 @@
 # My SAT Hub — 1450+
 
-Amar nijer SAT preparation system: plan, Math formula, English rules, daily checklist, error log ar score tracker, ek jaygay.
+A personal SAT study system: plan, formulas with visuals, grammar rules, a vocabulary trainer, flashcards, an error log, and score tracking in one place.
 
-## File gulo
-| File | Ki ache |
+Live: https://md-al-mamun22.github.io/sat-hub/
+
+## Files
+| File | What it holds |
 |---|---|
-| `index.html` | Page-er kathamo |
-| `visuals.js` | Formula-r chhobi (SVG). Notun chhobi jog korte ekhane. |
-| `content.js` | **Shob content** — plan, formula, rules, schedule, daily task. Update korte shudhu eta edit korbo. |
-| `app.js` | Dashboard, checklist, error log, score-er logic |
-| `style.css` | Design (light/dark dutoi) |
-| `marked.min.js` | Markdown-ke page-e dekhanor library (offline-o kaj kore). Edit korte hobe na. |
+| `index.html` | Page skeleton |
+| `content.js` | **All study content** — plan, schedule, formulas, rules, flashcards, daily tasks. Edit this to update the site. |
+| `vocab.js` | The 408-word SAT vocabulary list (word, part of speech, meaning, example) |
+| `visuals.js` | Formula pictures (SVG) |
+| `app.js` | Dashboard, trainers, trackers |
+| `style.css` | Design (light and dark mode) |
+| `marked.min.js` | Markdown library (works offline). Do not edit. |
 
-## Kivabe khulbo
-- **Computer-e:** `index.html` e double-click → browser-e khulbe.
-- **Online (GitHub Pages):**
-  1. GitHub-e notun repo banao, jemon `sat-hub`
-  2. Ei file gulo upload koro
-  3. Repo → **Settings → Pages** → Source: `Deploy from a branch` → Branch: `main` / `(root)` → Save
-  4. 1–2 minute por link pabe: `https://md-al-mamun22.github.io/sat-hub/`
+## Features
+- **Dashboard:** today's Math topic, English topic, reading type, and vocabulary; daily checklist; streak; on-track check against milestones; mistakes to redo
+- **Study plan:** every weekly topic with tick boxes and progress bars
+- **Formula cheat sheet:** all formulas with pictures; **Quiz mode** blurs formulas so you can test yourself
+- **Vocabulary trainer:** 10 new words a day + spaced-repetition reviews (1, 2, 4, 7, 15, 30 days), searchable word list, your own words
+- **Formula flashcards:** formulas and grammar rules with spaced repetition. Keyboard: Space = flip, → = knew it, ← = didn't know
+- **Error log:** weak topics and most common mistake type shown automatically
+- **Reading log, test score chart, 8-week activity heatmap, Settings, Backup**
 
-Phone theke-o ei link khule use kora jabe.
+## How to update content
+Open `content.js`:
+- **Default test date / targets:** `config` (or change them on the Settings page)
+- **Weekly focus and daily topics:** `schedule`
+- **New flashcard:** add `{ q: "question", a: "answer" }` to `flashcards`
+- **New word:** add `["word", "part of speech", "meaning", "example"]` to `vocab.js`
+- **Show formula pictures on a page:** inside `md`, on its own line, write `[[vis:pythagoras,soh]]` (ids are in `visuals.js`)
+- **New page:** add `{ id, group, title, md }` to `sections`
+- Do not use the backtick character inside `md`.
 
-## Ki ki ache
-- **Dashboard:** aj-er Math + English topic (schedule theke automatic), checklist, streak, score track-e ache kina, error log theke aj-er review
-- **Formula cheat sheet:** shob formula chhobi shoho, ek page-e
-- **Flashcards:** formula, grammar rule ar tomar vocabulary. Ja paro na segulo beshi bar ase. Keyboard: Space = uttor, → = jani, ← = jani na
-- **Error log:** weak topic automatic dekhay, "abar solve korechi" count rakhe
-- **Vocabulary, Reading log, Test scores (chart soho), Daily history, Backup**
-
-## Content update kivabe
-`content.js` khulo:
-- **Exam date / target bodlate:** `config` er bhitore
-- **Shoptaher focus bodlate:** `schedule` er bhitore
-- **Daily checklist bodlate:** `dailyTasks` er bhitore
-- **Notun flashcard:** `flashcards` e `{ q: "proshno", a: "uttor" }` jog koro
-- **Page-e formula chhobi dekhate:** md-er bhitore alada line-e `[[vis:pythagoras,soh]]` likho (id gulo `visuals.js` e)
-- **Notun note/formula jog korte:** je page-e chao, tar `md:` er bhitore Markdown-e likho
-- **Notun page:** `sections` e ekta notun block jog koro:
-  ```js
-  { id: "my-notes", group: "Math", title: "Amar notes", md: `
-  # Amar notes
-  - ekhane likho
-  ` },
-  ```
-- Shotorkota: `md` er bhitore backtick (`` ` ``) character dibe na.
-
-## Data kothay save hoy
-Checklist, error log ar score **browser-er localStorage-e** save hoy (GitHub-e na). Tai:
-- Prottek shoptahe **Backup / restore** page theke backup download koro
-- Onno device-e gele oi file **import** koro
+## Where your data is saved
+Your ticks, words, flashcard progress, error log, scores, and settings are saved in **this browser's localStorage** (not on GitHub). Download a backup from **Backup / restore** every week, and import it on another device.

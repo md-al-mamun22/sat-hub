@@ -2,15 +2,19 @@
   ==========================================================
   MY SAT HUB — CONTENT FILE
   ==========================================================
-  Ei file-ei shob content thake. Kichu update korte chaile shudhu ei file edit koro.
+  All study content lives here. To update the site, edit this file.
 
-  - config      : exam date, target score, start score
-  - schedule    : kon shoptahe kon topic (Dashboard-e "Aj-er focus" ekhan theke ashe)
-  - dailyTasks  : prottek diner checklist (2 ghonta)
-  - sections    : sidebar-er prottek page. "md" er bhitore Markdown likhbe.
+  - config        : default exam date, targets, milestones (can also be changed on the Settings page)
+  - quickLinks    : buttons on the Dashboard
+  - schedule      : weekly focus + one topic per day (shown on the Dashboard and Study plan)
+  - englishTopics : one R&W topic per day, rotating
+  - dailyTasks    : default daily checklist (editable on the Settings page)
+  - flashcards    : formula & grammar cards (vocabulary cards come from vocab.js)
+  - sections      : sidebar pages written in Markdown ("md")
 
-  Notun page add korte: sections-e ekta notun { id, group, title, md } jog koro.
-  Shotorkota: md-er bhitore backtick (`) character use korbe na.
+  Notes:
+  - Inside "md" do not use the backtick character.
+  - [[vis:id1,id2]] on its own line shows formula visuals from visuals.js.
   ==========================================================
 */
 
@@ -18,10 +22,10 @@ window.SAT = {
   config: {
     name: "Mamun",
     examDate: "2027-03-27",
-    startScore: 1050,
     startDate: "2026-11-18",
+    startScore: 1050,
     target: { total: 1450, math: 780, rw: 680 },
-    // Kobe koto score thaka uchit (Dashboard "track-e acho kina" ekhan theke hisab kore)
+    newWordsPerDay: 10,
     milestones: [
       { date: "2026-12-31", score: 1200 },
       { date: "2027-02-28", score: 1350 },
@@ -29,7 +33,6 @@ window.SAT = {
     ]
   },
 
-  // Dashboard-er quick link button
   quickLinks: [
     { label: "Question Bank", url: "https://satsuitequestionbank.collegeboard.org/" },
     { label: "Bluebook practice", url: "https://bluebook.collegeboard.org/students/practice" },
@@ -37,204 +40,203 @@ window.SAT = {
     { label: "Desmos", url: "https://www.desmos.com/calculator" }
   ],
 
-  // Prottek shoptahe focus. "topics" theke prottek din ekta kore topic Dashboard-e ashe (shesh hole abar shuru theke).
   schedule: [
     { from: "2026-11-18", to: "2026-11-24", focus: "Math: Geometry & Trigonometry", page: "geometry",
-      topics: ["Lines, angles, triangle 180°, similar triangles", "Pythagoras, 45-45-90, 30-60-90", "Trigonometry: SOH-CAH-TOA, sin x = cos(90 − x)", "Circle: paridhi, area, arc, sector, radian", "Circle equation, completing the square, inscribed angle", "Area, volume, scaling", "Geometry mixed test + error log review"] },
+      topics: ["Lines, angles, triangle sum, similar triangles", "Pythagoras, 45-45-90, 30-60-90", "Trigonometry: SOH-CAH-TOA, sin x = cos(90° − x)", "Circles: circumference, area, arc, sector, radians", "Circle equation, completing the square, inscribed angles", "Area, volume, scaling", "Geometry mixed test + error log review"] },
     { from: "2026-11-25", to: "2026-12-08", focus: "Math: Problem Solving & Data Analysis", page: "psda",
-      topics: ["Ratio, rate, unit conversion", "Percent & percent change", "Mean, median, outlier", "Standard deviation & spread", "Probability & two-way table", "Scatterplot, best-fit, linear vs exponential", "Sampling & margin of error"] },
+      topics: ["Ratios, rates, unit conversion", "Percent & percent change", "Mean, median, outliers", "Standard deviation & spread", "Probability & two-way tables", "Scatterplots, line of best fit, linear vs exponential", "Sampling & margin of error"] },
     { from: "2026-12-09", to: "2026-12-29", focus: "Math: Advanced Math", page: "advanced",
-      topics: ["Exponent & radical rules", "Equivalent expressions (expand/factor)", "Quadratic: factoring", "Quadratic formula & discriminant", "Vertex form & parabola graph", "Exponential growth/decay", "Function notation & transformations", "Polynomial zeros & factors", "Nonlinear systems (Desmos)", "Rational expressions", "Advanced Math mixed Hard set"] },
+      topics: ["Exponent & radical rules", "Equivalent expressions (expand/factor)", "Quadratics: factoring", "Quadratic formula & discriminant", "Vertex form & parabola graphs", "Exponential growth/decay", "Function notation & transformations", "Polynomial zeros & factors", "Nonlinear systems (Desmos)", "Rational expressions", "Advanced Math mixed hard set"] },
     { from: "2026-12-30", to: "2027-01-12", focus: "Math: Algebra", page: "algebra",
-      topics: ["Linear equation (1 variable)", "Slope & line forms", "Slope/intercept in context", "System of equations", "No solution / infinite solution", "Linear inequalities", "Algebra mixed Hard set"] },
+      topics: ["Linear equations in one variable", "Slope & forms of a line", "Slope/intercept in context", "Systems of equations", "No solution / infinitely many solutions", "Linear inequalities", "Algebra mixed hard set"] },
     { from: "2027-01-13", to: "2027-02-28", focus: "Phase 2: Hard practice + error log + full test every 2 weeks", page: "plan",
-      topics: ["Hard: Advanced Math", "Hard: Algebra", "Hard: PSDA", "Hard: Geometry & Trig", "Hard R&W: reading questions", "Error log-er shob bhul abar solve", "Full test (2 shoptahe ekbar) / weak topic drill"] },
+      topics: ["Hard: Advanced Math", "Hard: Algebra", "Hard: Problem Solving & Data Analysis", "Hard: Geometry & Trig", "Hard R&W: reading questions", "Redo every error log question", "Full test (every 2nd week) / weak-topic drill"] },
     { from: "2027-03-01", to: "2027-03-27", focus: "Phase 3: Test mode", page: "testday",
-      topics: ["Full timed test", "Test-er bhul review", "Weak topic drill", "Error log redo", "Formula & grammar flashcards"] }
+      topics: ["Full timed test", "Review test mistakes", "Weak-topic drill", "Redo error log", "Formula & grammar flashcards"] }
   ],
 
-  // English topic: prottek din ekta kore, ghure ghure ashe
   englishTopics: [
-    { t: "Sentence boundaries (comma splice)", page: "grammar" },
-    { t: "Semicolon & colon", page: "grammar" },
-    { t: "Nonessential info: comma/dash pair", page: "grammar" },
+    { t: "Sentence boundaries (comma splices)", page: "grammar" },
+    { t: "Semicolons & colons", page: "grammar" },
+    { t: "Nonessential info: comma/dash pairs", page: "grammar" },
     { t: "Subject-verb agreement", page: "grammar" },
-    { t: "Pronoun & apostrophe", page: "grammar" },
-    { t: "Verb tense & modifier", page: "grammar" },
+    { t: "Pronouns & apostrophes", page: "grammar" },
+    { t: "Verb tense & modifiers", page: "grammar" },
     { t: "Transitions", page: "transitions" },
     { t: "Rhetorical synthesis", page: "transitions" },
     { t: "Words in context", page: "rwtypes" },
     { t: "Text structure & purpose", page: "rwtypes" },
-    { t: "Central idea & details", page: "rwtypes" },
+    { t: "Central ideas & details", page: "rwtypes" },
     { t: "Command of evidence (text)", page: "rwtypes" },
-    { t: "Command of evidence (graph/table)", page: "rwtypes" },
+    { t: "Command of evidence (graphs/tables)", page: "rwtypes" },
     { t: "Inferences", page: "rwtypes" },
     { t: "Cross-text connections", page: "rwtypes" }
   ],
 
-  // Flashcard: q = proshno, a = uttor. Notun card jog korte ekhane line add koro.
+  dailyTasks: [
+    { id: "recall",  label: "Formula & rule recall (blank-page test + flashcards)", minutes: 10 },
+    { id: "concept", label: "Math: learn today's topic (Khan Academy + notes)", minutes: 25 },
+    { id: "mathq",   label: "Math: Question Bank practice (Easy → Hard)", minutes: 35 },
+    { id: "reading", label: "English: read 1 article actively", minutes: 20 },
+    { id: "rwq",     label: "English: grammar / R&W practice", minutes: 15 },
+    { id: "vocab",   label: "Vocabulary: today's new words + due reviews", minutes: 10 },
+    { id: "errors",  label: "Log today's mistakes in the error log", minutes: 5 }
+  ],
+
   flashcards: [
-    { q: "Triangle-er 3 angle-er jogfol?", a: "180°" },
-    { q: "Triangle-er bahirer kon = ?", a: "Dur-er duto bhitorer konar jogfol" },
-    { q: "Parallel line-e transversal: kon angle gulo shoman?", a: "Shob chhoto angle shoman, shob boro angle shoman. Chhoto + boro = 180°" },
-    { q: "Similar triangle-e DE ∥ BC hole ratio?", a: "AD/AB = AE/AC = DE/BC (puro side diye, tukra diye na)" },
-    { q: "Pythagoras?", a: "a² + b² = c²" },
+    { q: "Sum of the angles in a triangle?", a: "180°" },
+    { q: "Exterior angle of a triangle = ?", a: "The sum of the two remote interior angles" },
+    { q: "Parallel lines cut by a transversal: which angles are equal?", a: "All small angles are equal, all large angles are equal. Small + large = 180°" },
+    { q: "Similar triangles with DE ∥ BC: the ratio?", a: "AD/AB = AE/AC = DE/BC (use whole sides, not pieces)" },
+    { q: "Pythagorean theorem?", a: "a² + b² = c²" },
     { q: "Common Pythagorean triples?", a: "3-4-5, 5-12-13, 8-15-17, 7-24-25" },
-    { q: "45-45-90 ratio?", a: "x : x : x√2" },
-    { q: "30-60-90 ratio?", a: "x : x√3 : 2x (30° er ulto dike x)" },
+    { q: "45-45-90 side ratio?", a: "x : x : x√2" },
+    { q: "30-60-90 side ratio?", a: "x : x√3 : 2x (x is opposite 30°)" },
     { q: "sin θ = ?", a: "opposite / hypotenuse" },
     { q: "cos θ = ?", a: "adjacent / hypotenuse" },
     { q: "tan θ = ?", a: "opposite / adjacent" },
-    { q: "sin A = cos B hole A ar B-er shomporko?", a: "A + B = 90°" },
-    { q: "Circle-er paridhi?", a: "2πr" },
-    { q: "Circle-er area?", a: "πr²" },
-    { q: "Arc length (degree)?", a: "(θ/360) × 2πr" },
-    { q: "Arc length (radian)?", a: "rθ" },
-    { q: "Sector area (degree)?", a: "(θ/360) × πr²" },
-    { q: "π radian = koto degree?", a: "180°" },
-    { q: "Central angle ar inscribed angle-er shomporko?", a: "Central = 2 × inscribed" },
-    { q: "Circle equation?", a: "(x − h)² + (y − k)² = r², center (h, k)" },
-    { q: "Tangent ar radius milite koto degree?", a: "90°" },
-    { q: "Cylinder volume?", a: "πr²h" },
-    { q: "Cone volume?", a: "⅓πr²h" },
-    { q: "Sphere volume?", a: "(4/3)πr³" },
-    { q: "Length k gun barle area ar volume?", a: "Area × k², volume × k³" },
+    { q: "If sin A = cos B, how are A and B related?", a: "A + B = 90°" },
+    { q: "Circumference of a circle?", a: "2πr" },
+    { q: "Area of a circle?", a: "πr²" },
+    { q: "Arc length (degrees)?", a: "(θ/360) × 2πr" },
+    { q: "Arc length (radians)?", a: "rθ" },
+    { q: "Sector area (degrees)?", a: "(θ/360) × πr²" },
+    { q: "π radians = how many degrees?", a: "180°" },
+    { q: "Central angle vs inscribed angle?", a: "Central = 2 × inscribed (same arc)" },
+    { q: "Equation of a circle?", a: "(x − h)² + (y − k)² = r², center (h, k)" },
+    { q: "Angle between a tangent and the radius?", a: "90°" },
+    { q: "Volume of a cylinder?", a: "πr²h" },
+    { q: "Volume of a cone?", a: "⅓πr²h" },
+    { q: "Volume of a sphere?", a: "(4/3)πr³" },
+    { q: "If every length is multiplied by k, area and volume?", a: "Area × k², volume × k³" },
     { q: "Percent change?", a: "(new − old) / old × 100" },
-    { q: "Outlier kake beshi bodlay: mean na median?", a: "Mean" },
-    { q: "Shob value-te same sonkha jog korle SD?", a: "Bodlai na" },
+    { q: "Which does an outlier affect more: mean or median?", a: "The mean" },
+    { q: "Add the same number to every value: what happens to SD?", a: "It does not change" },
     { q: "Slope formula?", a: "(y₂ − y₁) / (x₂ − x₁)" },
-    { q: "Ax + By = C er slope?", a: "−A/B" },
-    { q: "Perpendicular line-er slope?", a: "Negative reciprocal (m₁ × m₂ = −1)" },
-    { q: "System-e 'no solution' kokhon?", a: "Slope same, intercept alada (parallel)" },
-    { q: "System-e 'infinite solution' kokhon?", a: "Duto equation ekoi line" },
+    { q: "Slope of Ax + By = C?", a: "−A/B" },
+    { q: "Slope of a perpendicular line?", a: "Negative reciprocal (m₁ × m₂ = −1)" },
+    { q: "When does a system have no solution?", a: "Same slope, different intercepts (parallel lines)" },
+    { q: "When does a system have infinitely many solutions?", a: "Both equations describe the same line" },
     { q: "Quadratic formula?", a: "x = (−b ± √(b² − 4ac)) / 2a" },
-    { q: "Vertex-er x?", a: "−b / 2a" },
-    { q: "Discriminant < 0 mane?", a: "Kono real solution nei" },
-    { q: "Discriminant = 0 mane?", a: "Ekta solution" },
-    { q: "Root-er jogfol ar gunfol?", a: "Jogfol = −b/a, gunfol = c/a" },
+    { q: "x-coordinate of the vertex?", a: "−b / 2a" },
+    { q: "Discriminant < 0 means?", a: "No real solutions" },
+    { q: "Discriminant = 0 means?", a: "Exactly one real solution" },
+    { q: "Sum and product of the roots?", a: "Sum = −b/a, product = c/a" },
     { q: "Exponential growth formula?", a: "a(1 + r)ᵗ" },
     { q: "x^(m/n) = ?", a: "ⁿ√(xᵐ)" },
-    { q: "f(x − h) graph-ke kothay shorai?", a: "Dane h unit" },
-    { q: "Negative diye gun/bhag korle inequality?", a: "Chinho ulte jai" },
-    { q: "Semicolon-er dui dike ki thakte hobe?", a: "Duto independent clause" },
-    { q: "Colon-er bam dike ki thakte hobe?", a: "Independent clause (complete sentence)" },
-    { q: "Comma splice ki?", a: "Shudhu comma diye duto complete sentence jora (bhul)" },
+    { q: "Where does f(x − h) move the graph?", a: "Right by h units" },
+    { q: "Multiply or divide an inequality by a negative?", a: "Flip the inequality sign" },
+    { q: "What must be on both sides of a semicolon?", a: "Two independent clauses" },
+    { q: "What must come before a colon?", a: "An independent clause (a complete sentence)" },
+    { q: "What is a comma splice?", a: "Joining two complete sentences with only a comma (an error)" },
     { q: "FANBOYS?", a: "for, and, nor, but, or, yet, so" },
-    { q: "Subject ar verb-er majhe comma?", a: "Na, kokhono na" },
-    { q: "its vs it's?", a: "its = tar, it's = it is" },
-    { q: "Nonessential info ghirte?", a: "Duto comma, duto dash ba duto bracket (mishabe na)" },
-    { q: "Contrast transition?", a: "however, nevertheless, in contrast, yet" },
-    { q: "Cause → effect transition?", a: "therefore, thus, consequently, as a result" },
-    { q: "Addition transition?", a: "moreover, furthermore, additionally" },
-    { q: "Rhetorical synthesis-e agey ki porbo?", a: "Proshner shesh-er goal, notes na" },
-    { q: "R&W proti proshne somoy?", a: "~71 second" },
-    { q: "Math proti proshne somoy?", a: "~95 second" }
-  ],
-
-  dailyTasks: [
-    { id: "recall",   label: "Formula & rule recall (blank page test)", minutes: 10 },
-    { id: "concept",  label: "Math: aj-er topic bujho (Khan Academy + notes)", minutes: 25 },
-    { id: "mathq",    label: "Math: Question Bank practice (Easy → Hard)", minutes: 40 },
-    { id: "reading",  label: "English: 1 ta article active reading", minutes: 20 },
-    { id: "rwq",      label: "English: grammar / R&W practice", minutes: 20 },
-    { id: "errors",   label: "Error log-e aj-er bhul likho", minutes: 5 }
+    { q: "Comma between a subject and its verb?", a: "Never" },
+    { q: "its vs it's?", a: "its = possessive; it's = it is" },
+    { q: "How to set off nonessential information?", a: "Two commas, two dashes, or two parentheses — never mixed" },
+    { q: "Contrast transitions?", a: "however, nevertheless, in contrast, yet" },
+    { q: "Cause → effect transitions?", a: "therefore, thus, consequently, as a result" },
+    { q: "Addition transitions?", a: "moreover, furthermore, additionally" },
+    { q: "Rhetorical synthesis: what do you read first?", a: "The goal at the end of the question, not the notes" },
+    { q: "Time per R&W question?", a: "About 71 seconds" },
+    { q: "Time per Math question?", a: "About 95 seconds" }
   ],
 
   sections: [
 /* ---------------------------------------------------------- */
-{ id: "plan", group: "Plan", title: "Master plan (18 weeks)", md: `
+{ id: "plan", group: "Plan", title: "Master plan", md: `
 # Master plan: 1050 → 1450+
 
-> Target: **Math 770–780 + R&W 670–680 = 1440–1460**. Exam: **March 27, 2027**.
+> Target: **Math 770–780 + R&W 670–680 = 1440–1460**. Test date: **March 27, 2027**.
+> Track your week-by-week topics on the **Study plan** page.
 
 ## Digital SAT structure
 
-| Section | Module | Proshno | Somoy |
+| Section | Modules | Questions | Time |
 |---|---|---|---|
-| Reading & Writing | 2 module | 27 + 27 = 54 | 32 + 32 min |
-| Math | 2 module | 22 + 22 = 44 | 35 + 35 min |
+| Reading & Writing | 2 | 27 + 27 = 54 | 32 + 32 min |
+| Math | 2 | 22 + 22 = 44 | 35 + 35 min |
 
-- Test **adaptive**: Module 1 bhalo korle Module 2 hard hoy. Hard Module 2 chhara 770+ shombhob na.
-- Math-er puro test-e **Desmos calculator** use kora jai.
-- Bhul uttor-er jonno kono negative marking nei, tai **kono proshno faka rakhbe na**.
+- The test is **adaptive**: a strong Module 1 unlocks a harder Module 2. You cannot reach 770+ Math without the hard Module 2.
+- **Desmos** is available for the entire Math section.
+- There is no penalty for wrong answers, so **never leave a question blank**.
 
-## 3 Phase
+## Three phases
 
 **Phase 1: Foundation (Nov 18 – Jan 12)**
 - Math order: Geometry & Trig → Problem Solving & Data Analysis → Advanced Math → Algebra
-- English: grammar rules + prottek din reading habit
+- English: grammar rules + daily reading + 10 new words a day
 
 **Phase 2: Hard practice (Jan 13 – Feb 28)**
-- College Board Question Bank-er Hard proshno
-- Error log protidin
-- Prottek 2 shoptahe Bluebook-e ekta full test
+- Hard questions from the College Board Question Bank
+- Error log every day
+- A full Bluebook test every two weeks
 
 **Phase 3: Test mode (March)**
-- Shoptahe 1–2 ta full timed test, ashol exam-er somoy-e
-- Notun kichu na, shudhu error log revise
-- Exam-er ager 2 din halka revision + bhalo ghum
+- 1–2 full timed tests per week, at the real test time of day
+- No new material: only error log review
+- Light revision and good sleep for the last 2 days
 
-## Milestone (track-e acho kina bujhte)
+## Milestones
 
-| Kobe | Target |
+| By | Target |
 |---|---|
-| December shesh | ~1200 |
-| February shesh | ~1350 |
-| March | 1450+ |
+| End of December | ~1200 |
+| End of February | ~1350 |
+| March 27 | 1450+ |
 
-## Prottek din 2 ghonta
+## Two hours a day
 
-| Somoy | Kaaj |
+| Time | Task |
 |---|---|
-| 10 min | Formula/rule recall: na dekhe likho |
+| 10 min | Formula/rule recall |
 | 25 min | Math concept |
-| 40 min | Math practice |
+| 35 min | Math practice |
 | 20 min | English reading |
-| 20 min | Grammar / R&W practice |
+| 15 min | Grammar / R&W practice |
+| 10 min | Vocabulary |
 | 5 min | Error log |
 
-## Resources
-Shob link **Resources** page-e ache.
+All resources are on the **Resources & links** page.
 ` },
 
 /* ---------------------------------------------------------- */
 { id: "resources", group: "Plan", title: "Resources & links", md: `
 # Resources & links
 
-## Official (free) — eigulo-i main
-| Ki | Kaj | Link |
+## Official (free) — your main tools
+| Tool | Use it for | Link |
 |---|---|---|
-| **Bluebook** | Official full-length adaptive practice test. Simito, tai shudhu score mapar jonno. | [bluebook.collegeboard.org](https://bluebook.collegeboard.org/students/practice) |
-| **SAT Suite Question Bank** | Topic + difficulty diye official proshno. Account lage na. | [satsuitequestionbank.collegeboard.org](https://satsuitequestionbank.collegeboard.org/) |
-| **Khan Academy (Official SAT Prep)** | Concept shekha, Foundations → Medium → Advanced | [College Board-er Khan Academy page](https://satsuite.collegeboard.org/practice/khan-academy) |
-| **Desmos** | Ghore calculator practice | [desmos.com/calculator](https://www.desmos.com/calculator) |
+| **Bluebook** | Official full-length adaptive practice tests. Limited supply, so use them to measure your score. | [bluebook.collegeboard.org](https://bluebook.collegeboard.org/students/practice) |
+| **SAT Suite Question Bank** | Official questions filtered by topic and difficulty. No account needed. | [satsuitequestionbank.collegeboard.org](https://satsuitequestionbank.collegeboard.org/) |
+| **Khan Academy (Official SAT Prep)** | Learning concepts: Foundations → Medium → Advanced | [College Board's Khan Academy page](https://satsuite.collegeboard.org/practice/khan-academy) |
+| **Desmos** | Calculator practice at home | [desmos.com/calculator](https://www.desmos.com/calculator) |
 
-## Question Bank kivabe use korbe
+## How to use the Question Bank
 1. **Assessment:** SAT
-2. **Test:** Math ba Reading and Writing
-3. **Domain:** aj-er topic (jemon Geometry and Trigonometry)
-4. **Difficulty:** prothome Easy + Medium, pore shudhu **Hard**
-5. Bhul hole uttor-er byakkha poro, tarpor **Error log**-e likho
+2. **Test:** Math or Reading and Writing
+3. **Domain:** today's topic (for example, Geometry and Trigonometry)
+4. **Difficulty:** Easy + Medium first, then **Hard only**
+5. When you miss one, read the explanation and add it to the **Error log**
 
-## Reading (prottek din 1 ta article)
-| Bishoy | Kothay | Link |
+## Reading (one article a day)
+| Subject | Source | Link |
 |---|---|---|
 | Science | Scientific American | [scientificamerican.com](https://www.scientificamerican.com/) |
 | Science / History | Smithsonian Magazine | [smithsonianmag.com](https://www.smithsonianmag.com/) |
 | Science / Society | BBC Future | [bbc.com/future](https://www.bbc.com/future) |
 | Social science | The Guardian — The Long Read | [theguardian.com/the-long-read](https://www.theguardian.com/news/series/the-long-read) |
 | Argument / Philosophy | Aeon | [aeon.co](https://aeon.co/) |
-| Literature | Project Gutenberg (free classic) | [gutenberg.org](https://www.gutenberg.org/) |
-| Literature shuru | Pride and Prejudice — Jane Austen | [gutenberg.org/ebooks/1342](https://www.gutenberg.org/ebooks/1342) |
+| Literature | Project Gutenberg (free classics) | [gutenberg.org](https://www.gutenberg.org/) |
+| Literature starter | Pride and Prejudice — Jane Austen | [gutenberg.org/ebooks/1342](https://www.gutenberg.org/ebooks/1342) |
 
-> Kichu site-e mase koyekta article-er por paywall ase. Atkale onno site-e jao.
+> Some sites show a paywall after a few free articles each month. If you hit one, switch to another source.
 ` },
 
 /* ---------------------------------------------------------- */
-{ id: "cheatsheet", group: "Math", title: "Formula cheat sheet (visual)", md: `
+{ id: "cheatsheet", group: "Math", title: "Formula cheat sheet", md: `
 # Formula cheat sheet
 
-> Shob formula ek page-e, chhobi shoho. Prottek din shokale 2 minute **chokh bulao**, tarpor **Flashcards** e test koro.
+> Every formula on one page, with a picture. Scan it for 2 minutes each morning. Turn on **Quiz mode** to hide the formulas and test yourself.
 
 ## Geometry & Trig
 [[vis:parallel,triangle,similar,pythagoras,tri45,tri30,soh,circle,inscribed,circleeq,volume,scaling]]
@@ -253,62 +255,62 @@ Shob link **Resources** page-e ache.
 { id: "geometry", group: "Math", title: "Geometry & Trigonometry", md: `
 # Geometry & Trigonometry
 
-> SAT Math-er ~15% (44-er moddhe 5–7 ta proshno). Shob formula mattro **4 ta idea** theke ase: **180°, Pythagoras, bhag (fraction), base × height**.
+> About 15% of SAT Math (5–7 of 44 questions). Nearly every formula comes from **4 ideas**: **180°, Pythagoras, fractions of a whole, base × height**.
 
 [[vis:parallel,triangle,similar]]
 
 ## 1. Lines & angles
-- Parallel line-e transversal: **shob chhoto angle shoman, shob boro angle shoman**. Chhoto + boro = 180°.
-- Vertical angle shoman.
-- Straight line = 180°, ekta point-er chardike = 360°.
+- Parallel lines cut by a transversal: **all small angles are equal, all large angles are equal**. Small + large = 180°.
+- Vertical angles are equal.
+- A straight line = 180°; all the way around a point = 360°.
 
 ## 2. Triangles
-- **A + B + C = 180°** (upor-er kona diye base-er parallel line kolpona koro, 3 angle ekta straight line hoy)
-- **Bahirer kon = dur-er duto bhitorer angle-er jogfol**
-- Isosceles: shoman side-er ulto diker angle shoman
-- **Similar triangle**: angle shoman → side-er ratio shoman
-  - DE ∥ BC hole: AD/AB = AE/AC = DE/BC
-  - **Trap:** ratio nibe puro side diye (AD/**AB**), tukra diye (AD/DB) na
+- **A + B + C = 180°** (draw a line through the top vertex parallel to the base: the three angles form a straight line)
+- **Exterior angle = sum of the two remote interior angles**
+- Isosceles: angles opposite equal sides are equal
+- **Similar triangles**: equal angles → proportional sides
+  - If DE ∥ BC: AD/AB = AE/AC = DE/BC
+  - **Trap:** use the whole side (AD/**AB**), not the pieces (AD/DB)
 
 ## 3. Right triangles
 [[vis:pythagoras,tri45,tri30]]
 
 - **a² + b² = c²** (c = hypotenuse)
-- Common triples: **3-4-5, 5-12-13, 8-15-17, 7-24-25** (ar egulor gunitok, jemon 6-8-10)
-- **45-45-90 = square-er ordhek:** x : x : x√2
-- **30-60-90 = equilateral triangle-er ordhek:** x : x√3 : 2x
-  - 30° er ulto dike shobcheye chhoto side (x), 60° er ulto dike x√3
+- Common triples: **3-4-5, 5-12-13, 8-15-17, 7-24-25** (and multiples like 6-8-10)
+- **45-45-90 = half a square:** x : x : x√2
+- **30-60-90 = half an equilateral triangle:** x : x√3 : 2x
+  - The shortest side (x) is opposite 30°; x√3 is opposite 60°
 
 ## 4. Trigonometry
 [[vis:soh]]
 
-| | Formula | Mone rakho |
+| | Formula | Memory hook |
 |---|---|---|
 | sin θ | opposite / hypotenuse | **SOH** |
 | cos θ | adjacent / hypotenuse | **CAH** |
 | tan θ | opposite / adjacent | **TOA** |
 
-- **sin x = cos(90° − x)**. Jodi sin A = cos B, tahole **A + B = 90°**.
-- Similar triangle-e angle same hole sin/cos/tan same.
+- **sin x = cos(90° − x)**. If sin A = cos B, then **A + B = 90°**.
+- Similar right triangles share the same sin, cos, and tan.
 
 ## 5. Circles
 [[vis:circle,inscribed,circleeq]]
 
-| Ki | Formula |
+| What | Formula |
 |---|---|
-| Paridhi | 2πr |
+| Circumference | 2πr |
 | Area | πr² |
-| Arc length | (θ/360) × 2πr, ba radian-e **rθ** |
-| Sector area | (θ/360) × πr², ba radian-e **½r²θ** |
+| Arc length | (θ/360) × 2πr, or **rθ** in radians |
+| Sector area | (θ/360) × πr², or **½r²θ** in radians |
 | Equation | **(x − h)² + (y − k)² = r²** → center (h, k) |
 
-- **π radian = 180°** (2π/3 = 120°, π/6 = 30°, π/4 = 45°)
-- **Central angle = 2 × inscribed angle** (ekoi arc-er upor)
-- Tangent line ar radius milite **90°**
-- Equation-e chinho ulto: (x − 3)² → x = +3; (y + 4)² → y = −4. Dan dike **r²**, r na.
-- x² + y² − 6x + 8y = 11 dhoroner proshne **completing the square** koro: x er coefficient-er ordhek-er square jog koro.
+- **π radians = 180°** (2π/3 = 120°, π/6 = 30°, π/4 = 45°)
+- **Central angle = 2 × inscribed angle** (same arc)
+- A tangent line meets the radius at **90°**
+- Signs flip: (x − 3)² → h = +3; (y + 4)² → k = −4. The right side is **r²**, not r.
+- For x² + y² − 6x + 8y = 11, **complete the square**: add (half the x-coefficient)² and (half the y-coefficient)² to both sides.
 
-## 6. Area & Volume
+## 6. Area & volume
 [[vis:volume,scaling]]
 
 | Shape | Formula |
@@ -322,86 +324,86 @@ Shob link **Resources** page-e ache.
 | Pyramid | ⅓ × base area × h |
 | Sphere | (4/3)πr³ |
 
-- Cone ar pyramid = cylinder/box-er **⅓**
+- A cone or pyramid is **⅓** of the matching cylinder or box
 - **Scaling:** length × k → area × **k²** → volume × **k³**
 
-> SAT test-e ekta reference sheet deya thake (area, volume, Pythagoras, special triangle). Tobu mukhosto rakho, karon druto chinte para-tai ashol.
+> The SAT gives a reference sheet (area, volume, Pythagoras, special triangles), but knowing these by heart saves time.
 ` },
 
 /* ---------------------------------------------------------- */
-{ id: "psda", group: "Math", title: "Problem Solving & Data Analysis", md: `
+{ id: "psda", group: "Math", title: "Problem Solving & Data", md: `
 # Problem Solving & Data Analysis
 
-> SAT Math-er ~15% (5–7 ta proshno). Beshirbhag word problem, table ar graph.
+> About 15% of SAT Math (5–7 questions). Mostly word problems, tables, and graphs.
 
-## 1. Ratio, rate, proportion
-- Proportion: a/b = c/d → **cross multiply**
-- Rate = poriman / somoy (jemon km per hour)
-- **Unit conversion:** unit gulo bhagnangsho hisebe likho, jate onnodorkari unit kete jai
-  - 3 ft/sec → ? ft/min: 3 × 60 = 180
+## 1. Ratios, rates, proportions
+- Proportion: a/b = c/d → **cross-multiply**
+- Rate = amount / time (for example, km per hour)
+- **Unit conversion:** write units as fractions so unwanted units cancel
+  - 3 ft/sec → ft/min: 3 × 60 = 180
 
 ## 2. Percent
 [[vis:percent]]
 
 - **Part = (percent/100) × whole**
 - **Percent change = (new − old) / old × 100**
-- x% barle: × (1 + x/100). x% komle: × (1 − x/100)
-- **Trap:** 20% bere tarpor 20% komle ager jaygay fire ashe na (1.2 × 0.8 = 0.96)
+- Increase by x%: × (1 + x/100). Decrease by x%: × (1 − x/100)
+- **Trap:** +20% then −20% does not return to the start (1.2 × 0.8 = 0.96)
 
 ## 3. Statistics
 [[vis:meanmedian,sd]]
 
-| Ki | Mane |
+| Term | Meaning |
 |---|---|
-| Mean | jogfol ÷ sonkha |
-| Median | sajale majher ta (jor hole majher duto-r gor) |
-| Mode | shobcheye beshi bar |
+| Mean | sum ÷ count |
+| Median | middle value when sorted (average the two middles if even) |
+| Mode | most frequent value |
 | Range | max − min |
-| Standard deviation | data koto chhoriye ache (formula lagbe na, shudhu tulona) |
+| Standard deviation | how spread out the data are (compare, no formula needed) |
 
-- **Outlier** (onek boro/chhoto value) mean-ke tene nei, **median-ke prai bodlai na**
-- Shob value-te same sonkha jog korle: mean bodlai, **SD bodlai na**
-- Data beshi chhoriye thakle SD beshi
+- An **outlier** pulls the mean but barely moves the **median**
+- Adding the same number to every value changes the mean, **not the SD**
+- More spread-out data → larger SD
 
 ## 4. Probability
-- **P = favorable / total**
-- Two-way table: proshne "**of those who...**" thakle denominator hobe shudhu oi group-er total (conditional probability)
+- **P = favorable outcomes / total outcomes**
+- Two-way tables: if the question says "**of those who...**", the denominator is only that group's total (conditional probability)
 
 ## 5. Data & graphs
 [[vis:linexp]]
 
-- Scatterplot-e **line of best fit**: slope = proti 1 unit x barle y koto bare
-- **Linear** = protibar shoman **poriman** bare. **Exponential** = protibar shoman **percent/gun** bare.
-- **Sampling:** random sample hole result puro population-e apply kora jai. Sample je group theke, conclusion shudhu shei group-er jonno.
-- **Margin of error** beshi = kom nishchit. Sample boro hole margin of error kome.
+- **Line of best fit**: the slope is how much y changes per 1 unit of x
+- **Linear** = increases by the same **amount** each step. **Exponential** = increases by the same **percent/factor** each step.
+- **Sampling:** a random sample lets you generalize to the population it was drawn from — and only that population.
+- A larger **margin of error** means less certainty. Larger samples reduce the margin of error.
 ` },
 
 /* ---------------------------------------------------------- */
 { id: "advanced", group: "Math", title: "Advanced Math", md: `
 # Advanced Math
 
-> SAT Math-er ~35% (13–15 ta proshno). **Sobcheye boro ar guruttopurno ongsho.**
+> About 35% of SAT Math (13–15 questions). **The biggest and most important domain.**
 
-## 1. Quadratics — 3 ta form
+## 1. Quadratics — three forms
 [[vis:parabola,discriminant]]
 
-| Form | Ki shohoj e pao |
+| Form | What it shows directly |
 |---|---|
 | Standard: ax² + bx + c | y-intercept = c |
 | Vertex: a(x − h)² + k | vertex (h, k) |
-| Factored: a(x − r)(x − s) | root/zero = r ar s |
+| Factored: a(x − r)(x − s) | roots/zeros r and s |
 
 - **Quadratic formula:** x = (−b ± √(b² − 4ac)) / 2a
-- **Vertex-er x = −b / 2a**
+- **Vertex x = −b / 2a**
 - **Discriminant D = b² − 4ac**
-  - D > 0 → 2 ta real solution
-  - D = 0 → 1 ta solution
-  - D < 0 → kono real solution nei
-- Root-er **jogfol = −b/a**, **gunfol = c/a**
-- a > 0 hole parabola upor dike khola (minimum ache), a < 0 hole nich dike (maximum ache)
+  - D > 0 → 2 real solutions
+  - D = 0 → 1 real solution
+  - D < 0 → no real solutions
+- **Sum of roots = −b/a**, **product = c/a**
+- a > 0 opens upward (has a minimum); a < 0 opens downward (has a maximum)
 
 ## 2. Exponents
-| Rule | Udahoron |
+| Rule | Example |
 |---|---|
 | xᵃ · xᵇ = xᵃ⁺ᵇ | x² · x³ = x⁵ |
 | xᵃ / xᵇ = xᵃ⁻ᵇ | x⁵ / x² = x³ |
@@ -414,251 +416,279 @@ Shob link **Resources** page-e ache.
 [[vis:exponential]]
 
 - **f(t) = a(1 + r)ᵗ** (growth), **a(1 − r)ᵗ** (decay)
-- a = shuru-r value, r = percent (decimal-e)
-- 1.05 mane 5% growth, 0.92 mane 8% decay
+- a = starting value, r = rate as a decimal
+- 1.05 means 5% growth; 0.92 means 8% decay
 
 ## 4. Functions
 [[vis:transform]]
 
-- f(3) mane x er jaygay 3 boshao
-- f(x) = 0 er solution = graph x-axis ke jekhane kate (zero/root/x-intercept)
-- **Transformation:**
-  - f(x) + k → upore k
-  - f(x − h) → dane h (chinho ulto!)
-  - −f(x) → x-axis e ulte jai
+- f(3) means substitute 3 for x
+- Solutions of f(x) = 0 are where the graph crosses the x-axis (zeros, roots, x-intercepts)
+- **Transformations:**
+  - f(x) + k → up k
+  - f(x − h) → right h (the sign flips!)
+  - −f(x) → reflect over the x-axis
 
-## 5. Polynomial & equivalent expressions
-- x = r jodi zero hoy, tahole **(x − r)** ekta factor
-- Equivalent expression proshne: dui dike expand koro, ba Desmos-e duto graph eke dekho ek line-e pore kina
-- Nonlinear system (line + parabola): **Desmos-e duto graph eke intersection dekho**
+## 5. Polynomials & equivalent expressions
+- If x = r is a zero, then **(x − r)** is a factor
+- Equivalent expressions: expand both, or graph both in Desmos and see if they match
+- Nonlinear systems (line + parabola): **graph both in Desmos and find the intersections**
 ` },
 
 /* ---------------------------------------------------------- */
 { id: "algebra", group: "Math", title: "Algebra", md: `
 # Algebra
 
-> SAT Math-er ~35% (13–15 ta proshno). Shohoj, kintu careless bhul ekhanei beshi hoy.
+> About 35% of SAT Math (13–15 questions). Easier, but most careless mistakes happen here.
 
-## 1. Linear equation & line
+## 1. Linear equations & lines
 [[vis:slope,parperp]]
 
 - **Slope m = (y₂ − y₁) / (x₂ − x₁)**
 - **Slope-intercept: y = mx + b** (b = y-intercept)
 - Point-slope: y − y₁ = m(x − x₁)
 - Standard form Ax + By = C → slope = **−A/B**
-- **Parallel line: same slope**
-- **Perpendicular line: slope gun korle −1** (2 er perpendicular −1/2)
+- **Parallel lines: same slope**
+- **Perpendicular lines: slopes multiply to −1** (2 ⟂ −1/2)
 
-## 2. Context-e slope ar intercept
-- Slope = **proti unit-e koto bodlay** (rate)
-- y-intercept = **shuru-r value** (x = 0 hole)
-- Udahoron: C = 25h + 40 → proti ghonta 25 taka, fixed charge 40 taka
+## 2. Slope and intercept in context
+- Slope = **change per unit** (a rate)
+- y-intercept = **starting value** (when x = 0)
+- Example: C = 25h + 40 → 25 per hour plus a fixed fee of 40
 
-## 3. System of equations
+## 3. Systems of equations
 [[vis:systems]]
 
-| Ki holo | Mane |
+| Result | Meaning |
 |---|---|
-| Ekta solution | slope alada |
-| **Kono solution nei** | slope same, intercept alada (parallel) |
-| **Infinite solution** | dui equation ashole ekoi line |
+| One solution | different slopes |
+| **No solution** | same slope, different intercepts (parallel) |
+| **Infinitely many** | both equations are the same line |
 
-- Solve: substitution, elimination, ba **Desmos-e intersection**
+- Solve by substitution, elimination, or **Desmos intersection**
 
 ## 4. Inequalities
-- Negative sonkha diye gun/bhag korle **chinho ulte jai**
-- Graph-e: < / > hole dashed line, ≤ / ≥ hole solid line
+- Multiplying or dividing by a negative **flips the sign**
+- On a graph: < or > uses a dashed line; ≤ or ≥ uses a solid line
 
 ## 5. Absolute value
-- |x − 3| = 5 → x − 3 = 5 ba x − 3 = −5 → x = 8 ba −2
+- |x − 3| = 5 → x − 3 = 5 or x − 3 = −5 → x = 8 or −2
 ` },
 
 /* ---------------------------------------------------------- */
 { id: "desmos", group: "Math", title: "Desmos tricks", md: `
-# Desmos — tomar sobcheye boro hatiyar
+# Desmos — your biggest weapon
 
-> 770+ er jonno Desmos-e druto hote hobe. Bluebook-e built-in Desmos ache, ghore practice koro desmos.com e.
+> For 770+ you must be fast in Desmos. Bluebook has Desmos built in; practice at desmos.com at home.
 
-## Kokhon use korbe
-| Proshno | Kivabe |
+## When to use it
+| Question type | How |
 |---|---|
-| System of equations | duto equation likho → **intersection point-e click** |
-| Quadratic-er root | equation likho → x-axis e jekhane kate |
-| Vertex / max / min | graph-er upor click, point dekhabe |
-| Equivalent expression | duto expression alada line-e likho → graph mile gele equivalent |
-| "Kon value-te kono solution nei" | ekta constant-er jaygay **slider** (k) diye nariye dekho |
-| Regression | table banao, tarpor **y₁ ~ mx₁ + b** likho |
-| Circle equation | puro equation likho, center ar radius chokhe dekho |
+| System of equations | type both equations → **click the intersection** |
+| Roots of a quadratic | type the equation → read where it crosses the x-axis |
+| Vertex / max / min | click the curve; Desmos shows the point |
+| Equivalent expressions | type each on its own line → if the graphs overlap, they are equivalent |
+| "For what value is there no solution?" | replace the constant with a **slider** (k) and move it |
+| Regression | make a table, then type **y₁ ~ mx₁ + b** |
+| Circle equation | type the whole equation and read the center and radius |
 
 ## Tips
-- Uttor-er option gulo Desmos-e boshiye check kora jai
-- Kono kono proshno haate druto hoy. Desmos je kono proshno check korar jonno, shob somoy solve korar jonno na.
-- Prottek din 5 minute Desmos-e practice koro, jate exam-e somoy nosto na hoy
+- You can plug answer choices into Desmos to check them
+- Some questions are faster by hand. Desmos is for checking, not for every question.
+- Practice 5 minutes of Desmos daily so it costs no time on test day
+` },
+
+/* ---------------------------------------------------------- */
+{ id: "vocabguide", group: "English", title: "Vocabulary guide", md: `
+# Vocabulary: how much and how
+
+## How many words do you need?
+- There is **no official SAT word list**. Vocabulary is tested only through **Words in Context** questions (a short passage with a blank or an underlined word).
+- Prep sources disagree, ranging from about **100 to 600** high-frequency academic words. The SAT favors useful academic words (like *undermine*, *empirical*, *tentative*) over rare ones.
+- This hub includes **408 core words** in the **Vocabulary** trainer. Learning them well covers the vocabulary you need for 670–680 R&W.
+
+## Your daily target
+| | Amount |
+|---|---|
+| New words per day | **10** (change it in Settings) |
+| Reviews | whatever is **due today** (usually 10–30) |
+| Time | about **10 minutes** |
+| Full list finished | about **41 days** (by the end of December) |
+
+After the list is done, keep doing the daily reviews until test day. Reviews keep the words in long-term memory.
+
+## How the trainer works (spaced repetition)
+1. Each day you get **10 new words** with a meaning and an example sentence.
+2. Mark **"Learned"** and the word goes into review.
+3. When a word is due, you see it in **Review**. Say the meaning out loud, then flip.
+4. **Knew it** → the next review is later (1 → 2 → 4 → 7 → 15 → 30 days). **Didn't know** → it comes back tomorrow.
+5. A word reaching the 15-day level counts as **mastered**.
+
+## Learn words the SAT way
+- Always read the **example sentence**, not just the meaning — the SAT tests words in context.
+- Watch the **"Multiple meanings"** set: SAT loves common words used in uncommon ways (*check* = stop, *qualify* = limit, *sound* = reliable).
+- Add new words from your reading on the **Vocabulary** page under **My words**.
 ` },
 
 /* ---------------------------------------------------------- */
 { id: "reading", group: "English", title: "Reading habit", md: `
 # Reading habit
 
-> Digital SAT-e prottek proshner jonno **chhoto passage** (25–150 shobdo). Dorkar: **druto pore mul kotha dhorte para**.
+> Digital SAT passages are **short** (about 25–150 words per question). The skill is **finding the main point quickly**.
 
-## Prottek din 20 minute, ei bishoy theke poro
-| Dhoron | Link |
+## 20 minutes a day, from these sources
+| Type | Links |
 |---|---|
 | Science | [Scientific American](https://www.scientificamerican.com/) · [Smithsonian](https://www.smithsonianmag.com/) · [BBC Future](https://www.bbc.com/future) |
 | History / Social science | [The Guardian — The Long Read](https://www.theguardian.com/news/series/the-long-read) · [Aeon](https://aeon.co/) |
-| Literature | [Project Gutenberg](https://www.gutenberg.org/) · shuru koro [Pride and Prejudice](https://www.gutenberg.org/ebooks/1342) diye |
+| Literature | [Project Gutenberg](https://www.gutenberg.org/) · start with [Pride and Prejudice](https://www.gutenberg.org/ebooks/1342) |
 
-> Rotation: Sat-Mon science, Tue-Wed history/society, Thu-Fri literature.
+> Rotation: Sat–Mon science, Tue–Wed history/society, Thu–Fri literature. The Dashboard shows today's type.
 
-## Active reading (eta-i ashol practice)
-1. Prottek paragraph-er por thamo → **ek line-e nijer bhashay**: "lekhok ki bolchen?"
-2. Ochena shobdo → **agey context theke mane anuman**, tarpor dictionary
-3. Din-e **5 ta notun shobdo** note-e likho, je bakko-e peyecho seta soho
-4. Shesh e 2 line likho: **mul argument ki + ki proman diyechen**
-
-## Log rakho
-- Pora article **Reading log** page-e add koro (title, link, mul kotha)
-- Notun shobdo **Vocabulary** page-e add koro. Egulo automatically **Flashcards**-e chole ashbe.
+## Active reading (this is the real practice)
+1. After each paragraph, stop → say in **one line**: "What is the author saying?"
+2. Unknown word → **guess the meaning from context first**, then check a dictionary
+3. Add new words to **My words** on the Vocabulary page
+4. At the end, write 2 lines in the **Reading log**: the **main argument + the evidence used**
 ` },
 
 /* ---------------------------------------------------------- */
 { id: "grammar", group: "English", title: "Grammar rules", md: `
 # Grammar rules (Standard English Conventions)
 
-> R&W-er ekta boro ongsho grammar. Rule shekha jai, tai **egulo "free point"** — prai perfect korte hobe.
+> A large share of R&W is grammar. The rules are learnable, so treat these as **free points** — aim for near-perfect.
 
-## 1. Sentence = Independent clause
-Independent clause = **subject + verb + purno mane**. "She runs." ekta complete sentence.
+## 1. A sentence = an independent clause
+Independent clause = **subject + verb + a complete thought**. "She runs." is a complete sentence.
 
-## 2. Duto independent clause jorar 4 upay
-| Upay | Udahoron |
+## 2. Four ways to join two independent clauses
+| Method | Example |
 |---|---|
 | Period (.) | I studied. I passed. |
 | Semicolon (;) | I studied; I passed. |
 | Comma + FANBOYS | I studied, **so** I passed. |
-| Colon (:) jodi 2nd part 1st part-ke byakkha kore | I had one goal: I wanted to pass. |
+| Colon (:) when the second part explains the first | I had one goal: I wanted to pass. |
 
 - **FANBOYS** = for, and, nor, but, or, yet, so
-- **Comma splice (bhul):** I studied, I passed. ❌ (shudhu comma diye duto sentence jora jai na)
-- However, therefore er age shudhu comma diye jora jai na: "I studied; **however,** I failed." ✔
+- **Comma splice (wrong):** I studied, I passed. ❌
+- Words like however/therefore cannot join sentences with just a comma: "I studied; **however,** I failed." ✔
 
 ## 3. Semicolon (;)
-Dui dikei **independent clause** thakte hobe.
+Both sides must be **independent clauses**.
 
 ## 4. Colon (:)
-**Bam dik** independent clause hote hobe. Dan dik = list, byakkha, ba udahoron.
+The **left side** must be an independent clause. The right side is a list, explanation, or example.
 - ✔ She needed three things: time, money, and focus.
 - ❌ She needed: time, money, and focus.
 
-## 5. Extra information (nonessential)
-- Duto comma, duto dash, ba duto bracket diye ghirte hobe — **ek dhoron**, mishabe na
+## 5. Nonessential information
+- Set it off with two commas, two dashes, or two parentheses — **one kind, never mixed**
 - ✔ My brother, **a doctor,** lives in Dhaka.
 - ❌ My brother, a doctor — lives in Dhaka.
-- Info-ta bad dile sentence thik thakle seta nonessential
+- If the sentence still works without it, it is nonessential
 
-## 6. Jekhane comma **dibe na**
-- Subject ar verb-er majhe ❌
-- Verb ar object-er majhe ❌
-- Essential info-r charpashe ❌ (The student **who studied** passed.)
+## 6. Where **not** to put a comma
+- Between a subject and its verb ❌
+- Between a verb and its object ❌
+- Around essential information ❌ (The student **who studied** passed.)
 
 ## 7. Subject-verb agreement
-- **Ashol subject khojo**, majher "of ..." phrase bad dao
+- **Find the real subject** and ignore "of ..." phrases
   - The list **of items** **is** long. (subject = list → is)
 - Each, every, either, neither → singular
 
-## 8. Pronoun
-- Singular noun → it/its, plural → they/their
-- **its** = tar (possessive), **it's** = it is
-- **their** = tader, **they're** = they are, **there** = sekhane
+## 8. Pronouns
+- Singular noun → it/its; plural → they/their
+- **its** = possessive; **it's** = it is
+- **their** = possessive; **they're** = they are; **there** = a place
 
-## 9. Possessive apostrophe
-- Ekjon: student**'s** book
-- Onekjon: students**'** books
+## 9. Possessive apostrophes
+- One person: the student**'s** book
+- Many people: the students**'** books
 
 ## 10. Verb tense
-- Passage-er baki ongsho je tense-e ache, shei tense mene cholo
+- Match the tense used in the rest of the passage
 
-## 11. Modifier
-- Shuru-r phrase-er thik porei sei jinish thakte hobe jake se describe kore
+## 11. Modifiers
+- An opening phrase must be followed immediately by the thing it describes
   - ✔ Walking to school, **I** saw a dog.
   - ❌ Walking to school, **a dog** was seen.
 ` },
 
 /* ---------------------------------------------------------- */
-{ id: "transitions", group: "English", title: "Transitions & Synthesis", md: `
+{ id: "transitions", group: "English", title: "Transitions & synthesis", md: `
 # Transitions & Rhetorical Synthesis
 
-## Transitions — agey shomporko bujho, tarpor shobdo bacho
-| Shomporko | Shobdo |
+## Transitions — find the relationship first, then the word
+| Relationship | Words |
 |---|---|
-| **Biporit / contrast** | however, nevertheless, nonetheless, in contrast, still, yet |
-| **Karon → fol** | therefore, thus, consequently, as a result, hence |
-| **Aro jog** | moreover, furthermore, additionally, in addition, also |
-| **Udahoron** | for example, for instance |
-| **Mil / similar** | similarly, likewise |
-| **Somoy / kromo** | subsequently, then, finally, meanwhile |
-| **Jor deya / sotti** | in fact, indeed |
-| **Shar-shongkhep** | in short, in summary |
+| **Contrast** | however, nevertheless, nonetheless, in contrast, still, yet |
+| **Cause → effect** | therefore, thus, consequently, as a result, hence |
+| **Addition** | moreover, furthermore, additionally, in addition, also |
+| **Example** | for example, for instance |
+| **Similarity** | similarly, likewise |
+| **Time / sequence** | subsequently, then, finally, meanwhile |
+| **Emphasis** | in fact, indeed |
+| **Summary** | in short, in summary |
 
-**Kivabe solve korbe:** faka-r ager ar porer bakko pore nijeke jigesh koro: "ei duto-r shomporko ki?" Tarpor table theke group bacho. Shobdo dekhe na, **shomporko** dekhe bacho.
+**Method:** read the sentence before and after the blank and ask, "How are these two related?" Pick the group from the table, then the word. Choose by **relationship**, not by how the word sounds.
 
-## Rhetorical Synthesis (notes-wala proshno)
-1. **Notes porbe na agey.** Proshner shesh-er **goal** ta pore nao (jemon "emphasize a difference", "introduce the study to an audience unfamiliar with...")
-2. Option gulo theke je ta **goal ta purno kore**, seta bacho
-3. Option-er tothyo notes-e ache kina dekhe nao, eto-tukui
+## Rhetorical Synthesis (the bullet-notes questions)
+1. **Do not read the notes first.** Read the **goal** at the end of the question (for example, "emphasize a difference" or "introduce the study to an unfamiliar audience").
+2. Pick the option that **accomplishes that goal**.
+3. Quickly confirm its facts appear in the notes.
 
-> Eta SAT-er sobcheye shohoj proshno gulor ekta. Ekhane bhul kora jabe na.
+> One of the easiest question types on the SAT. Do not lose points here.
 ` },
 
 /* ---------------------------------------------------------- */
 { id: "rwtypes", group: "English", title: "R&W question types", md: `
 # Reading & Writing question types
 
-| Type | Ki chai | Kivabe |
+| Type | What it asks | How to approach it |
 |---|---|---|
-| **Words in Context** | faka-te kon shobdo boshe | Option dekhar agey **nijer shobdo** bhabo, tarpor milao |
-| **Text Structure & Purpose** | lekhok keno likhechen / ekta line-er kaj ki | Passage-er "kaj" ek shobde bolo: explain, argue, contrast... |
-| **Cross-Text Connections** | duto passage-er lekhok ki bhabe ekmot/dimot | Agey dui jon-er mul kotha alada likho |
-| **Central Ideas & Details** | mul kotha | Shob bakko cover kore emon option bacho, khub sorho ba khub boro na |
-| **Command of Evidence (text)** | kon proman claim-ke support kore | Claim-ta agey nijer bhashay bolo |
-| **Command of Evidence (graph/table)** | data diye claim support | Option-er protiti sonkha graph-e check koro |
-| **Inferences** | logical next step | Passage theke **noto** shudhu jeta nishchit bhabe ase |
-| **Boundaries / Form** | grammar | Grammar rules page dekho |
-| **Transitions** | jora shobdo | Transitions page dekho |
-| **Rhetorical Synthesis** | notes theke goal | Transitions page dekho |
+| **Words in Context** | which word fits the blank | Predict **your own word** before looking at the choices |
+| **Text Structure & Purpose** | why the author wrote it / what a sentence does | Name its job in one word: explain, argue, contrast... |
+| **Cross-Text Connections** | how two authors agree or disagree | Write each author's main point separately first |
+| **Central Ideas & Details** | the main point | Choose the option that covers the whole passage — not too narrow, not too broad |
+| **Command of Evidence (text)** | which evidence supports a claim | Restate the claim in your own words first |
+| **Command of Evidence (graphs/tables)** | which data support a claim | Check every number in the choice against the graphic |
+| **Inferences** | the logical next step | Take only what **must** follow from the passage |
+| **Boundaries / Form** | grammar | See Grammar rules |
+| **Transitions** | the connecting word | See Transitions & synthesis |
+| **Rhetorical Synthesis** | goal from notes | See Transitions & synthesis |
 
-## Shob proshner jonno
-- **Option dekhar agey uttor-ta nije anuman koro**
-- Shothik uttor **passage-e proman shoho** thakbe. Bahirer gyan lage na.
-- **Extreme shobdo** (always, never, completely, proves) thakle shondeho koro
-- Duto option-er majhe atkale: passage theke **sorasori proman** kon ta-r beshi?
+## For every question
+- **Predict the answer before reading the choices**
+- The correct answer is **supported by the passage**. Outside knowledge is not needed.
+- Be suspicious of **extreme words** (always, never, completely, proves)
+- Stuck between two choices? Pick the one with **more direct evidence** in the passage.
 ` },
 
 /* ---------------------------------------------------------- */
 { id: "testday", group: "Exam", title: "Test day strategy", md: `
 # Test day strategy
 
-## Somoy
-- R&W: proti proshno ~**71 second**
-- Math: proti proshno ~**95 second**
-- Ekta proshne 2 minute-er beshi atkale → **mark for review**, pore fire esho
+## Timing
+- R&W: about **71 seconds** per question
+- Math: about **95 seconds** per question
+- Stuck for more than 2 minutes → **mark for review** and come back
 
-## Module 1 = sobcheye guruttopurno
-- Module 1 bhalo hole hard Module 2 ase, ar hard module chhara 1450 shombhob na
-- Module 1-e **careless bhul** ekdom na. Prottek uttor ekbar check koro.
+## Module 1 matters most
+- A strong Module 1 unlocks the hard Module 2, and 1450 needs the hard module
+- **Zero careless mistakes** in Module 1. Double-check every answer.
 
-## Kono proshno faka na
-- Negative marking nei. Na parle-o anuman kore uttor dao.
+## Never leave a blank
+- There is no penalty for guessing.
 
-## Ager din
-- Notun kichu porbe na. Shudhu formula page ar error log dekho.
-- Bluebook app update, device charge, admission ticket, ID ready rakho
-- **Bhalo ghum** — eta score-er onek boro ongsho
+## The day before
+- No new material. Only the formula cheat sheet and your error log.
+- Update Bluebook, charge your device, prepare your admission ticket and ID
+- **Sleep well** — it is a big part of your score
 
-## Exam-er din
-- Halka khabar, somoy-er agey pouchao
-- Ekta proshno kharap gele mathay rekho na, porer ta-te fokus
+## Test day
+- Light meal, arrive early
+- If one question goes badly, let it go and focus on the next
 ` }
   ]
 };
