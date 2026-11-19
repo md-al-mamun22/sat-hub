@@ -16,6 +16,7 @@ Live: https://md-al-mamun22.github.io/sat-hub/
 | `marked.min.js` | Markdown library (works offline). Do not edit. |
 
 ## Features
+- **Concept check:** a topic is "understood" only after studying it, explaining it in your own words (40+ words, pasting blocked), and scoring 4/5+ on a short concept quiz. Practice before that is flagged; weak accuracy later sends it back to Re-learn.
 - **Practice log:** record every set (topic, difficulty, questions, correct, minutes, understanding 1–5). It powers every number in the hub.
 - **Accountability:** day X of Y, days left, days studied vs missed, streak, questions practiced, readiness %.
 - **Auto checklist:** Math, R&W, reading, error-log, vocabulary, and flashcard tasks tick themselves from real activity — they cannot be ticked by hand.

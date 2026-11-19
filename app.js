@@ -8,7 +8,7 @@
   const NEW_FORMULA_PER_DAY = 15;
 
   // ---------- storage ----------
-  function blank() { return { daily: {}, errors: [], scores: [], vocab: [], reads: [], srs: {}, intro: {}, topics: {}, settings: {}, practice: [], trackFrom: "" }; }
+  function blank() { return { daily: {}, errors: [], scores: [], vocab: [], reads: [], srs: {}, intro: {}, topics: {}, settings: {}, practice: [], trackFrom: "", concepts: {} }; }
   function normalize(d) {
     const b = blank();
     Object.keys(b).forEach((k) => { if (d && d[k]) b[k] = d[k]; });
@@ -202,6 +202,25 @@
     return total;
   }
 
+  // ---------- concept check (understand before you practice) ----------
+  const MIN_WORDS = 40;
+  const wordCount = (t) => (String(t || "").trim().match(/\S+/g) || []).length;
+  const concept = (name) => data.concepts[name] || {};
+  function conceptStatus(name) {
+    const c = concept(name);
+    if (c.cleared) {
+      const st = topicStats(name);
+      return st.n >= 15 && st.acc < 70 ? ["Re-learn", "relearn"] : ["Clear", "clear"];
+    }
+    if (c.studied || c.notes) return ["In progress", "progress"];
+    return ["Not started", "none"];
+  }
+  const conceptClear = (name) => conceptStatus(name)[0] === "Clear";
+  function updateCleared(name) {
+    const c = data.concepts[name];
+    if (c && c.studied && wordCount(c.notes) >= MIN_WORDS && c.quiz && c.quiz.pass) { if (!c.cleared) c.cleared = todayStr(); }
+  }
+
   // ---------- honesty check ----------
   function honestyFlags() {
     const flags = [];
@@ -216,6 +235,14 @@
     S.schedule.forEach((w) => {
       if (w.to < t && w.to >= (data.trackFrom || "") && MATH_PAGES.includes(w.page)) w.topics.forEach((name) => { if (!isMixed(name) && topicStats(name).n === 0) flags.push(["Skipped topic", "“" + name + "” (" + w.from + " → " + w.to + ") has no practice logged."]); });
     });
+    const early = {};
+    pr().forEach((p) => {
+      if (p.source === "Concept check" || /^Mixed/.test(p.topic)) return;
+      const c = concept(p.topic);
+      if (!c.cleared || p.date < c.cleared) early[p.topic] = (early[p.topic] || 0) + Number(p.n);
+    });
+    Object.keys(early).forEach((n) => flags.push(["Practice before understanding", early[n] + " questions on “" + n + "” were logged before its Concept check was cleared."]));
+    topicList().forEach((x) => { if (conceptStatus(x.name)[0] === "Re-learn") flags.push(["Re-learn", "“" + x.name + "” was marked clear, but accuracy has fallen below 70%. Redo its Concept check."]); });
     const pd = planDays();
     const recent = pd.missed.filter((d) => dayDiff(d, t) <= 7);
     if (recent.length) flags.push(["Missed days", plural(recent.length, "day") + " without study in the last week: " + recent.join(", ") + "."]);
@@ -270,6 +297,7 @@
       accItem("R&W", "Hard R&W accuracy ≥ 78% (last 100 Hard)", { n: rh.n, acc: rh.acc }, 50, 78),
       { group: "R&W", label: "300 words mastered", prog: Math.min(1, ws.mastered / 300), detail: ws.mastered + " mastered · " + ws.started + " started" },
       { group: "R&W", label: "R&W test score ≥ " + c.target.rw, prog: ls ? Math.min(1, (ls.rw - 200) / (c.target.rw - 200)) : 0, detail: ls ? "latest " + ls.rw : "no test yet" },
+      (() => { const all = topicList(), cl = all.filter((x) => conceptClear(x.name)).length; return { group: "General", label: "Concept check cleared for every topic", prog: cl / all.length, detail: cl + " / " + all.length + " topics" }; })(),
       { group: "General", label: "Formula cards mastered ≥ 90%", prog: Math.min(1, pct(fm, fcs.length) / 90), detail: fm + " / " + fcs.length + " mastered" },
       { group: "General", label: "Studied on ≥ 85% of days", prog: pd.passed ? Math.min(1, pct(pd.studied, pd.passed) / 85) : 0, detail: pd.studied + " of " + pd.passed + " days (" + pct(pd.studied, pd.passed) + "%)" },
       { group: "General", label: "Every mistake redone 2+ times", prog: data.errors.length ? redone / data.errors.length : 0, detail: redone + " / " + data.errors.length + " mistakes" },
@@ -345,6 +373,7 @@
   const planPage = { id: "studyplan", group: "Plan", title: "Study plan (tracker)" };
   const readyPage = { id: "readiness", group: "Plan", title: "Readiness check" };
   const extraPages = [
+    { id: "concepts", group: "Practice", title: "Concept check" },
     { id: "practice", group: "Practice", title: "Practice log" },
     { id: "mastery", group: "Practice", title: "Topic mastery" },
     { id: "vocab", group: "Practice", title: "Vocabulary trainer" },
@@ -371,7 +400,12 @@
       if (p.id === "flashcards") { const n = formulaQueue().length; if (n) badge = '<span class="badge">' + n + "</span>"; }
       html += '<a class="nav-link' + (p.id === active ? " active" : "") + '" href="#' + esc(p.id) + '">' + esc(p.title) + badge + "</a>";
     });
-    $("#sidebar").innerHTML = html;
+    const sb = $("#sidebar");
+    const keep = sb.scrollTop;
+    sb.innerHTML = html;
+    sb.scrollTop = keep;
+    const a = sb.querySelector(".nav-link.active");
+    if (a && (a.offsetTop < sb.scrollTop || a.offsetTop + a.offsetHeight > sb.scrollTop + sb.clientHeight)) sb.scrollTop = a.offsetTop - sb.clientHeight / 3;
   }
 
   // ---------- pages ----------
@@ -391,7 +425,7 @@
         '<label class="f">Date<input type="date" name="date" value="' + todayStr() + '"></label>' +
         '<label class="f wide">Note (optional)<input name="note" placeholder="what was hard?"></label>') +
       '<div><button class="btn" type="submit">Log practice</button></div>' +
-      '<div class="form-err" id="' + formId + 'Err"></div></form>';
+      '<div class="form-err" id="' + formId + 'Err"></div><div class="concept-note muted" id="' + formId + 'Note"></div></form>';
   }
 
   function pageDashboard() {
@@ -450,7 +484,8 @@
       '<div class="today">' +
         '<div class="today-box"><div class="today-label">Today\'s Math topic' + (tt ? " · Day " + tt.day : "") + "</div>" +
           (tt ? '<div class="today-topic">' + esc(tt.topic) + '</div><div class="today-links"><a href="#' + esc(tt.week.page) + '">Open ' + esc(pageTitle(tt.week.page)) + ' →</a>' +
-            '<label class="mini-check"><input type="checkbox" data-topic="' + esc(weekKey(tt.week, tt.idx)) + '"' + (topicDone ? " checked" : "") + "> Done</label></div>"
+            '<label class="mini-check"><input type="checkbox" data-topic="' + esc(weekKey(tt.week, tt.idx)) + '"' + (topicDone ? " checked" : "") + "> Done</label></div>" +
+            (MATH_PAGES.includes(tt.week.page) && !isMixed(tt.topic) ? '<div class="today-links" style="margin-top:4px">Concept: <b>' + conceptStatus(tt.topic)[0] + '</b> · <a href="#concepts">Concept check →</a></div>' : "")
             : '<div class="today-topic">No schedule for today — update it in content.js</div>') + "</div>" +
         '<div class="today-box"><div class="today-label">Today\'s English topic</div>' +
           (en ? '<div class="today-topic">' + esc(en.t) + '</div><div class="today-links"><a href="#' + esc(en.page) + '">Open ' + esc(pageTitle(en.page)) + " →</a></div>" : "") + "</div>" +
@@ -482,6 +517,48 @@
         '<div style="margin-top:8px">' + status + "</div></div>" +
       '<div class="card"><b>Redo today (from your error log)</b>' + reviewHtml + "</div>"
     );
+  }
+
+  let cc = { filter: "week", editing: {} };
+  function conceptCard(x) {
+    const c = concept(x.name);
+    const [label, cls] = conceptStatus(x.name);
+    const key = encodeURIComponent(x.name);
+    const wc = wordCount(c.notes);
+    const s1 = !!c.studied, s2 = wc >= MIN_WORDS && !cc.editing[x.name], s3 = c.quiz && c.quiz.pass;
+    const tagCls = cls === "clear" ? "good" : cls === "none" ? "plain" : "";
+    const step1 = '<div class="step"><div class="step-title">' + (s1 ? '<span class="ok">✓</span> ' : "1. ") + "Study the lesson</div>" +
+      '<div class="today-links"><a href="#' + esc(x.page) + '">Open ' + esc(pageTitle(x.page)) + ' notes →</a><a target="_blank" rel="noopener" href="https://satsuite.collegeboard.org/practice/khan-academy">Khan Academy lesson ↗</a></div>' +
+      (s1 ? '<div class="muted">Studied on ' + esc(c.studied) + "</div>" : '<button class="btn small" style="margin-top:8px" data-cstudied="' + key + '">I studied the notes and the lesson</button>') + "</div>";
+    const step2 = '<div class="step' + (s1 ? "" : " locked") + '"><div class="step-title">' + (s2 ? '<span class="ok">✓</span> ' : "2. ") + "Explain it in your own words</div>" +
+      (s2
+        ? '<div class="saved-note">' + esc(c.notes) + '</div><button class="btn ghost small" style="margin-top:8px" data-cedit="' + key + '">Edit</button>'
+        : '<div class="muted">Write the rule, when to use it, and one example — as if teaching a friend. At least ' + MIN_WORDS + " words. Typing only: pasting is turned off.</div>" +
+          '<textarea class="nopaste" data-cnotes="' + key + '" placeholder="In my own words...">' + esc(c.notes || "") + '</textarea><div class="inline"><span class="wc" data-cwc="' + key + '">' + wc + " / " + MIN_WORDS + ' words</span><button class="btn small" data-csave="' + key + '">Save explanation</button></div>') + "</div>";
+    const step3 = '<div class="step' + (s1 && s2 ? "" : " locked") + '"><div class="step-title">' + (s3 ? '<span class="ok">✓</span> ' : "3. ") + "Concept quiz: 5 Easy/Medium Question Bank questions</div>" +
+      (c.quiz ? '<div class="muted">Last attempt ' + esc(c.quiz.date) + ": " + c.quiz.c + "/5 — " + (c.quiz.pass ? "passed" : "not yet (need 4+)") + "</div>" : "") +
+      (s3 ? "" : '<div class="inline"><label class="f">Correct out of 5<input type="number" min="0" max="5" data-cquiz="' + key + '"></label><button class="btn small" data-cquizbtn="' + key + '">Record quiz</button></div>') + "</div>";
+    return '<div class="ccard ' + cls + '"><div class="ccard-head"><div><div class="ccard-title">' + esc(x.name) + '</div><div class="muted">' + esc(x.section + " · " + x.domain) + '</div></div><span class="tag ' + tagCls + '">' + label + "</span></div>" + step1 + step2 + step3 + "</div>";
+  }
+  function pageConcepts() {
+    const t = todayStr();
+    const all = topicList();
+    const w = currentWeek();
+    const weekNames = w && MATH_PAGES.includes(w.page) ? w.topics.filter((n) => !isMixed(n)) : [];
+    const en = todayEnglish();
+    let list;
+    if (cc.filter === "week") list = all.filter((x) => weekNames.includes(x.name) || (en && x.name === en.t));
+    else if (cc.filter === "math") list = all.filter((x) => x.section === "Math");
+    else if (cc.filter === "rw") list = all.filter((x) => x.section === "R&W");
+    else list = all.filter((x) => !conceptClear(x.name));
+    const clear = all.filter((x) => conceptClear(x.name)).length;
+    const opt = (v, l) => '<button class="btn ' + (cc.filter === v ? "" : "ghost") + ' small" data-cfilter="' + v + '">' + l + "</button>";
+    return "<h1>Concept check</h1>" +
+      '<div class="card"><b>Rule: understand first, then practice.</b><p class="muted" style="margin:6px 0 0">A topic counts as understood only after all three steps: <b>1.</b> study the notes and lesson, <b>2.</b> explain it in your own words (' + MIN_WORDS + "+ words, no pasting), <b>3.</b> score 4/5 or better on 5 Easy/Medium questions from the Question Bank. " +
+      "Practice logged on a topic before it is cleared is flagged on the Dashboard. If your accuracy on a cleared topic later falls below 70%, it is sent back to <b>Re-learn</b>.</p>" +
+      '<div class="bar" style="margin-top:10px"><div style="width:' + Math.round((clear / all.length) * 100) + '%"></div></div><div class="muted" style="margin-top:4px">' + clear + " / " + all.length + " topics clear</div></div>" +
+      '<div class="actions" style="margin-bottom:14px">' + opt("week", "This week + today's English") + opt("math", "All Math") + opt("rw", "All R&W") + opt("open", "Not clear yet") + "</div>" +
+      (list.length ? '<div class="cgrid">' + list.map(conceptCard).join("") + "</div>" : '<div class="card muted">Nothing here.</div>');
   }
 
   function pagePractice() {
@@ -535,9 +612,10 @@
         const fading = st.last && dayDiff(st.last, t) > 14 && (label === "Solid" || label === "Mastered");
         const warn = ticked[x.name] && st.n < 10 ? ' <span class="tag">ticked, no proof</span>' : "";
         return "<tr><td>" + esc(x.name) + warn + "</td><td>" + st.n + "</td><td>" + (st.n ? st.acc + "%" : "—") + "</td><td>" + (st.hn ? st.hacc + "% (" + st.hn + ")" : "—") + "</td><td>" + (st.und ? st.und + "/5" : "—") + "</td><td>" + (st.last ? esc(st.last) + (fading ? ' <span class="tag">fading</span>' : "") : "—") +
+          "</td><td>" + (() => { const cs = conceptStatus(x.name); return '<span class="tag ' + (cs[1] === "clear" ? "good" : cs[1] === "none" ? "plain" : "") + '">' + cs[0] + "</span>"; })() +
           '</td><td><span class="tag ' + cls + '">' + label + "</span></td></tr>";
       }).join("");
-      return '<div class="card md"><b>' + esc(g) + '</b><table><tr><th>Topic</th><th>Questions</th><th>Accuracy</th><th>Hard</th><th>Understanding</th><th>Last practiced</th><th>Status</th></tr>' + rows + "</table></div>";
+      return '<div class="card md"><b>' + esc(g) + '</b><table><tr><th>Topic</th><th>Questions</th><th>Accuracy</th><th>Hard</th><th>Understanding</th><th>Last practiced</th><th>Concept</th><th>Status</th></tr>' + rows + "</table></div>";
     }).join("");
     const total = topicList().length;
     return "<h1>Topic mastery</h1>" +
@@ -833,7 +911,7 @@
     const sec = S.sections.find((s) => s.id === id);
     renderHeader();
     renderNav(id);
-    const pages = { studyplan: pageStudyPlan, readiness: pageReadiness, practice: pagePractice, mastery: pageMastery, vocab: pageVocab, flashcards: pageFlashcards, errors: pageErrors, reads: pageReads, scores: pageScores, tracker: pageTracker, settings: pageSettings, backup: pageBackup };
+    const pages = { concepts: pageConcepts, studyplan: pageStudyPlan, readiness: pageReadiness, practice: pagePractice, mastery: pageMastery, vocab: pageVocab, flashcards: pageFlashcards, errors: pageErrors, reads: pageReads, scores: pageScores, tracker: pageTracker, settings: pageSettings, backup: pageBackup };
     $("#main").classList.remove("quiz");
     $("#main").innerHTML = sec ? md(sec.md) : (pages[id] || pageDashboard)();
     document.querySelectorAll('#main a[href^="http"]').forEach((a) => { a.target = "_blank"; a.rel = "noopener"; });
@@ -872,9 +950,39 @@
       data.srs["u:" + id] = { lvl: 0, due: addDays(todayStr(), 1), last: todayStr() };
       save(); rerender();
     });
+    // concept check
+    const dec = (k) => decodeURIComponent(k);
+    const cget = (n) => data.concepts[n] || (data.concepts[n] = {});
+    on("[data-cfilter]", "click", (b) => { cc.filter = b.dataset.cfilter; rerender(); });
+    on("[data-cstudied]", "click", (b) => { const n = dec(b.dataset.cstudied); cget(n).studied = todayStr(); updateCleared(n); save(); rerender(); });
+    on("[data-cedit]", "click", (b) => { cc.editing[dec(b.dataset.cedit)] = true; rerender(); });
+    document.querySelectorAll("textarea.nopaste").forEach((ta) => {
+      ["paste", "drop"].forEach((ev) => ta.addEventListener(ev, (e) => { e.preventDefault(); const w = ta.parentElement.querySelector(".wc"); if (w) w.textContent = "Pasting is off — type it in your own words."; }));
+      ta.addEventListener("input", () => { const w = ta.parentElement.querySelector(".wc"); if (w) w.textContent = wordCount(ta.value) + " / " + MIN_WORDS + " words"; });
+    });
+    on("[data-csave]", "click", (b) => {
+      const n = dec(b.dataset.csave);
+      const ta = document.querySelector('textarea[data-cnotes="' + b.dataset.csave + '"]');
+      const w = b.parentElement.querySelector(".wc");
+      if (wordCount(ta.value) < MIN_WORDS) { w.textContent = "Need at least " + MIN_WORDS + " words (now " + wordCount(ta.value) + ")."; return; }
+      const c = cget(n); c.notes = ta.value; c.notesDate = todayStr(); delete cc.editing[n]; updateCleared(n); save(); rerender();
+    });
+    on("[data-cquizbtn]", "click", (b) => {
+      const n = dec(b.dataset.cquizbtn);
+      const inp = document.querySelector('input[data-cquiz="' + b.dataset.cquizbtn + '"]');
+      const v = Number(inp.value);
+      if (inp.value === "" || v < 0 || v > 5) { inp.setCustomValidity("Enter 0–5"); inp.reportValidity(); return; }
+      const tp = topicList().find((x) => x.name === n);
+      data.practice.push({ id: uid(), date: todayStr(), section: tp ? tp.section : "Math", topic: n, diff: "Easy", n: 5, correct: v, minutes: 0, und: v >= 4 ? 4 : 2, source: "Concept check", note: "" });
+      const c = cget(n); c.quiz = { date: todayStr(), c: v, pass: v >= 4 }; updateCleared(n); save(); rerender();
+    });
+
     ["quickPractice", "practiceForm"].forEach((fid) => {
       const pf = $("#" + fid);
       if (!pf) return;
+      const sel = pf.querySelector("select[name=topic]");
+      const note = () => { const n = sel.value, el = $("#" + fid + "Note"); if (!el) return; const tp = topicList().find((x) => x.name === n); el.innerHTML = tp && !conceptClear(n) ? '⚠ Concept check for “' + esc(n) + '” is not cleared yet — <a href="#concepts">clear it first</a>, or this practice will be flagged.' : ""; };
+      sel.addEventListener("change", note); note();
       pf.addEventListener("submit", (e) => {
         e.preventDefault();
         const f = new FormData(pf);
