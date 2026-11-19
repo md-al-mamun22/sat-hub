@@ -206,3 +206,24 @@ label.f.wide { grid-column: 1 / -1; }
 .hm.l2 { background: color-mix(in srgb, var(--accent) 55%, var(--accent-soft)); }
 .hm.l3 { background: var(--accent); }
 @media (max-width: 760px) { .heat { grid-template-columns: repeat(14, 1fr); } }
+
+/* ---------- v4 additions ---------- */
+.daybar { display: flex; flex-wrap: wrap; gap: 8px 22px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; margin-bottom: 12px; font-size: 14px; }
+.daybar b { color: var(--accent); font-size: 16px; }
+.daybar .warn b { color: var(--warn); }
+.grid.two { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.task.auto { cursor: default; }
+.task.auto input { opacity: .7; }
+.auto-info { display: block; font-size: 12px; color: var(--muted); }
+.flagcard { border-color: var(--warn); }
+.flag { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+.flag:last-child { border-bottom: none; }
+.req { padding: 8px 0; }
+.req-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; font-size: 14px; }
+.chart .bar-m { fill: var(--accent); }
+.chart .bar-r { fill: var(--good); }
+.chart .miss { fill: var(--warn); font-size: 13px; }
+.lg.rw { background: var(--good); }
+.form-err { grid-column: 1 / -1; color: var(--warn); font-size: 13px; min-height: 0; }
+label.f.wide2 { grid-column: span 2; }
+@media (max-width: 760px) { label.f.wide2 { grid-column: 1 / -1; } }

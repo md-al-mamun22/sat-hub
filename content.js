@@ -24,12 +24,17 @@ window.SAT = {
     examDate: "2027-03-27",
     startDate: "2026-11-18",
     startScore: 1050,
-    target: { total: 1450, math: 780, rw: 680 },
+    // Goal ranges: Math 770–780, R&W 700–740 → total 1470–1520. The minimum of each range is the target.
+    target: { total: 1470, math: 770, rw: 700 },
+    stretch: { total: 1520, math: 780, rw: 740 },
     newWordsPerDay: 10,
+    // Daily practice targets (questions). Changeable in Settings.
+    dailyMathQ: 20,
+    dailyRwQ: 15,
     milestones: [
-      { date: "2026-12-31", score: 1200 },
-      { date: "2027-02-28", score: 1350 },
-      { date: "2027-03-27", score: 1450 }
+      { date: "2026-12-31", score: 1220 },
+      { date: "2027-02-28", score: 1400 },
+      { date: "2027-03-27", score: 1470 }
     ]
   },
 
@@ -76,9 +81,9 @@ window.SAT = {
   dailyTasks: [
     { id: "recall",  label: "Formula & rule recall (blank-page test + flashcards)", minutes: 10 },
     { id: "concept", label: "Math: learn today's topic (Khan Academy + notes)", minutes: 25 },
-    { id: "mathq",   label: "Math: Question Bank practice (Easy → Hard)", minutes: 35 },
+    { id: "mathq",   label: "Math: Question Bank practice — log it in Practice log", minutes: 35 },
     { id: "reading", label: "English: read 1 article actively", minutes: 20 },
-    { id: "rwq",     label: "English: grammar / R&W practice", minutes: 15 },
+    { id: "rwq",     label: "English: R&W practice — log it in Practice log", minutes: 15 },
     { id: "vocab",   label: "Vocabulary: today's new words + due reviews", minutes: 10 },
     { id: "errors",  label: "Log today's mistakes in the error log", minutes: 5 }
   ],
@@ -144,9 +149,10 @@ window.SAT = {
   sections: [
 /* ---------------------------------------------------------- */
 { id: "plan", group: "Plan", title: "Master plan", md: `
-# Master plan: 1050 → 1450+
+# Master plan: 1050 → 1470+
 
-> Target: **Math 770–780 + R&W 670–680 = 1440–1460**. Test date: **March 27, 2027**.
+> Target: **Math 770–780 + R&W 700–740 = 1470–1520**. Test date: **March 27, 2027**.
+> What each score needs is on the **Target 770+ / 700+** page; your live progress is on **Readiness check**.
 > Track your week-by-week topics on the **Study plan** page.
 
 ## Digital SAT structure
@@ -180,9 +186,9 @@ window.SAT = {
 
 | By | Target |
 |---|---|
-| End of December | ~1200 |
-| End of February | ~1350 |
-| March 27 | 1450+ |
+| End of December | ~1220 |
+| End of February | ~1400 |
+| March 27 | 1470+ |
 
 ## Two hours a day
 
@@ -199,6 +205,53 @@ window.SAT = {
 All resources are on the **Resources & links** page.
 ` },
 
+/* ---------------------------------------------------------- */
+{ id: "target", group: "Plan", title: "Target 770+ / 700+", md: `
+# What Math 770–780 and R&W 700–740 require
+
+> Your live progress against every requirement below is on the **Readiness check** page. It updates from your Practice log, vocabulary, flashcards, error log, and test scores.
+
+## Error budget (approximate)
+The score curve changes from test to test, so treat these as rough guides and confirm with your Bluebook score reports.
+
+| Section | Score | Mistakes allowed (roughly) |
+|---|---|---|
+| Math (44 questions) | 770–780 | **0–2** |
+| R&W (54 questions) | 700–740 | **about 3–8** |
+
+Both sections are adaptive: you must earn the **harder Module 2** by doing very well in Module 1.
+
+## Math 770–780: what you must be able to do
+1. **Module 1 with zero careless mistakes.** In your error log, "Calculation slip" and "Misread the question" must fall close to zero.
+2. **Hard questions at 85–90%+ accuracy** in every domain on the Question Bank.
+3. **Every Math topic practiced** — at least 30 questions per topic, including Hard ones.
+4. **Desmos fluency** for systems, quadratics, circles, and equivalent expressions.
+5. **Time left over:** finish each module with about 5 minutes to check answers.
+
+## R&W 700–740: what you must be able to do
+1. **Grammar (Standard English Conventions) near 100%** — these are rule-based points.
+2. **Transitions and Rhetorical Synthesis near 100%** — the easiest questions on the test.
+3. **Words in Context:** about 300+ words mastered in the Vocabulary trainer, plus context-clue skill.
+4. **Reading questions** (inference, evidence, central idea) on Hard at 75–80%+.
+5. **Daily reading** so short academic passages feel easy.
+
+## Practice volume
+| Daily target | Amount |
+|---|---|
+| Math questions | 20 (log every set) |
+| R&W questions | 15 |
+| New words | 10 + due reviews |
+| Formula flashcards | everything due |
+
+- **Full tests:** use the official Bluebook tests, spaced out — one every two weeks in Jan–Feb, then 1–2 per week in March.
+- **Every mistake** goes into the error log and gets redone at least twice.
+
+## How the system keeps you honest
+- **Practice log** records every set: topic, difficulty, questions, correct, time, and how well you understood it.
+- Checklist items for Math, R&W, vocabulary, reading, and the error log **tick themselves** from what you actually did. You cannot tick them by hand.
+- **Topic mastery** shows the real numbers for every topic.
+- The Dashboard's **Honesty check** flags topics ticked without practice, skipped topics, missed days, and topics marked done while you rated your understanding low.
+` },
 /* ---------------------------------------------------------- */
 { id: "resources", group: "Plan", title: "Resources & links", md: `
 # Resources & links
@@ -505,7 +558,7 @@ All resources are on the **Resources & links** page.
 ## How many words do you need?
 - There is **no official SAT word list**. Vocabulary is tested only through **Words in Context** questions (a short passage with a blank or an underlined word).
 - Prep sources disagree, ranging from about **100 to 600** high-frequency academic words. The SAT favors useful academic words (like *undermine*, *empirical*, *tentative*) over rare ones.
-- This hub includes **408 core words** in the **Vocabulary** trainer. Learning them well covers the vocabulary you need for 670–680 R&W.
+- This hub includes **408 core words** in the **Vocabulary** trainer. Learning them well covers the vocabulary you need for 700–740 R&W.
 
 ## Your daily target
 | | Amount |
@@ -675,7 +728,7 @@ The **left side** must be an independent clause. The right side is a list, expla
 - Stuck for more than 2 minutes → **mark for review** and come back
 
 ## Module 1 matters most
-- A strong Module 1 unlocks the hard Module 2, and 1450 needs the hard module
+- A strong Module 1 unlocks the hard Module 2, and 1470+ needs the hard module
 - **Zero careless mistakes** in Module 1. Double-check every answer.
 
 ## Never leave a blank

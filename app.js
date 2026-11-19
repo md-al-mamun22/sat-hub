@@ -8,7 +8,7 @@
   const NEW_FORMULA_PER_DAY = 15;
 
   // ---------- storage ----------
-  function blank() { return { daily: {}, errors: [], scores: [], vocab: [], reads: [], srs: {}, intro: {}, topics: {}, settings: {} }; }
+  function blank() { return { daily: {}, errors: [], scores: [], vocab: [], reads: [], srs: {}, intro: {}, topics: {}, settings: {}, practice: [], trackFrom: "" }; }
   function normalize(d) {
     const b = blank();
     Object.keys(b).forEach((k) => { if (d && d[k]) b[k] = d[k]; });
@@ -19,6 +19,8 @@
   let data = load();
   // migrate words added before spaced repetition existed
   data.vocab.forEach((v) => { if (!data.srs["u:" + v.id]) data.srs["u:" + v.id] = { lvl: 0, due: todayStrRaw(), last: todayStrRaw() }; });
+  // honest tracking starts the first day this version is opened, so earlier days are not counted as missed
+  if (!data.trackFrom) { data.trackFrom = todayStrRaw(); try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
   function todayStrRaw() { const t = new Date(); return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0"); }
 
   // settings override defaults from content.js
@@ -32,6 +34,9 @@
       startScore: Number(s.startScore || c.startScore),
       target: { total: Number(s.targetTotal || c.target.total), math: Number(s.targetMath || c.target.math), rw: Number(s.targetRw || c.target.rw) },
       newWordsPerDay: Number(s.newWordsPerDay || c.newWordsPerDay || 10),
+      dailyMathQ: Number(s.dailyMathQ || c.dailyMathQ || 20),
+      dailyRwQ: Number(s.dailyRwQ || c.dailyRwQ || 15),
+      stretch: c.stretch || null,
       milestones: c.milestones || []
     };
   }
@@ -98,25 +103,180 @@
     return day === 6 || day === 0 || day === 1 ? READING[0] : day === 2 || day === 3 ? READING[1] : READING[2];
   }
 
-  // ---------- daily checklist ----------
-  function dayDone(dateStr) { const d = data.daily[dateStr]; return d && d.done && tasks().every((t) => d.done.includes(t.id)); }
+  // ---------- practice log ----------
+  const MATH_PAGES = ["geometry", "psda", "advanced", "algebra"];
+  const DOMAIN = { geometry: "Geometry & Trig", psda: "Problem Solving & Data", advanced: "Advanced Math", algebra: "Algebra", grammar: "Grammar (Conventions)", transitions: "Expression of ideas", rwtypes: "Reading (Craft & Info)" };
+  const isMixed = (name) => /mixed/i.test(name);
+  function topicList() {
+    const math = [];
+    S.schedule.forEach((w) => { if (MATH_PAGES.includes(w.page)) w.topics.forEach((t) => { if (!isMixed(t)) math.push({ name: t, section: "Math", domain: DOMAIN[w.page], page: w.page }); }); });
+    const rw = (S.englishTopics || []).map((x) => ({ name: x.t, section: "R&W", domain: DOMAIN[x.page] || "Reading", page: x.page }));
+    return math.concat(rw);
+  }
+  const pr = () => data.practice;
+  const sumQ = (list) => list.reduce((a, p) => ({ n: a.n + Number(p.n || 0), c: a.c + Number(p.correct || 0), m: a.m + Number(p.minutes || 0) }), { n: 0, c: 0, m: 0 });
+  const pct = (c, n) => (n ? Math.round((c / n) * 100) : 0);
+  const onDate = (d, section) => pr().filter((p) => p.date === d && (!section || p.section === section));
+  function topicStats(name) {
+    const l = pr().filter((p) => p.topic === name).sort((a, b) => (a.date < b.date ? -1 : 1));
+    const all = sumQ(l), hard = sumQ(l.filter((p) => p.diff === "Hard"));
+    const latest = l[l.length - 1];
+    return { n: all.n, c: all.c, acc: pct(all.c, all.n), hn: hard.n, hacc: pct(hard.c, hard.n), last: latest ? latest.date : "", und: latest ? Number(latest.und || 0) : 0, sessions: l.length, minutes: all.m };
+  }
+  function topicStatus(st) {
+    if (!st.n) return ["Not started", "plain"];
+    if (st.n >= 10 && st.acc < 70) return ["Weak", ""];
+    if (st.n >= 30 && st.acc >= 85 && st.hn >= 10 && st.hacc >= 80) return ["Mastered", "good"];
+    if (st.n >= 15 && st.acc >= 80) return ["Solid", "good"];
+    return ["Practicing", "plain"];
+  }
+  function sectionStats(sec, days) {
+    const t = todayStr();
+    return sumQ(pr().filter((p) => (!sec || p.section === sec) && (days == null || dayDiff(p.date, t) < days)));
+  }
+
+  // ---------- day counts ----------
+  function studiedOn(d) { return onDate(d).length > 0 || minutesFor(d) >= 60; }
+  function planDays() {
+    const c = cfg(), t = todayStr();
+    const total = dayDiff(c.startDate, c.examDate) + 1;
+    const dayN = Math.min(total, Math.max(1, dayDiff(c.startDate, t) + 1));
+    const from = data.trackFrom && data.trackFrom > c.startDate ? data.trackFrom : c.startDate;
+    let passed = Math.max(0, Math.min(dayDiff(from, t), total));
+    let studied = 0;
+    const missed = [];
+    for (let i = 0; i < passed; i++) { const d = addDays(from, i); if (studiedOn(d)) studied++; else missed.push(d); }
+    if (t >= from && studiedOn(t)) { studied++; passed++; } // today counts once you have studied
+    return { total, dayN, passed, studied, missed, left: Math.max(0, dayDiff(t, c.examDate)) };
+  }
+
+  // ---------- daily checklist (some tasks tick themselves from real activity) ----------
+  const AUTO_IDS = ["mathq", "rwq", "reading", "errors", "vocab", "recall"];
+  function autoTask(id, d) {
+    const c = cfg();
+    if (id === "mathq") { const n = sumQ(onDate(d, "Math")).n; return { done: n >= c.dailyMathQ, info: n + " / " + c.dailyMathQ + " questions logged" }; }
+    if (id === "rwq") { const n = sumQ(onDate(d, "R&W")).n; return { done: n >= c.dailyRwQ, info: n + " / " + c.dailyRwQ + " questions logged" }; }
+    if (id === "reading") { const n = data.reads.filter((r) => r.date === d).length; return { done: n > 0, info: n ? "article logged" : "add the article to Reading log" }; }
+    if (id === "errors") {
+      const q = sumQ(onDate(d)), wrong = q.n - q.c, need = Math.min(wrong, 3);
+      const logged = data.errors.filter((e) => e.date === d).length;
+      return { done: q.n > 0 && logged >= need, info: q.n ? wrong + " wrong today · " + logged + " logged" + (need > logged ? " (log " + need + "+)" : "") : "log practice first" };
+    }
+    if (d !== todayStr()) return null;
+    if (id === "vocab") { const left = todaysNewWords().length, due = wordStats().due; return { done: left === 0 && due === 0, info: left + " new left · " + due + " reviews due" }; }
+    if (id === "recall") {
+      const due = formulaQueue().length;
+      const touched = Object.keys(data.srs).some((k) => k.startsWith("f:") && data.srs[k].last === d);
+      return { done: touched && due === 0, info: due ? due + " formula cards left" : touched ? "all cards done" : "open Formula flashcards" };
+    }
+    return null;
+  }
+  function doneList(d) {
+    const rec = data.daily[d] || {};
+    const manual = (rec.done || []).filter((id) => !AUTO_IDS.includes(id));
+    const auto = tasks().filter((t) => AUTO_IDS.includes(t.id) && (() => { const a = autoTask(t.id, d); return a ? a.done : (rec.auto || []).includes(t.id); })()).map((t) => t.id);
+    return manual.concat(auto);
+  }
+  function snapshotToday() {
+    const t = todayStr();
+    const a = doneList(t).filter((id) => AUTO_IDS.includes(id));
+    const rec = data.daily[t] || { done: [] };
+    if (JSON.stringify(a) !== JSON.stringify(rec.auto || [])) { rec.auto = a; data.daily[t] = rec; save(); }
+  }
+  function dayDone(dateStr) { const dl = doneList(dateStr); return tasks().every((t) => dl.includes(t.id)); }
   function streak() {
     let n = 0;
     const d = new Date();
-    if (!dayDone(todayStr(d))) d.setDate(d.getDate() - 1);
-    while (dayDone(todayStr(d))) { n++; d.setDate(d.getDate() - 1); }
+    if (!studiedOn(todayStr(d))) d.setDate(d.getDate() - 1);
+    while (studiedOn(todayStr(d)) && todayStr(d) >= cfg().startDate) { n++; d.setDate(d.getDate() - 1); }
     return n;
   }
   function minutesFor(dateStr) {
-    const d = data.daily[dateStr];
-    if (!d || !d.done) return 0;
-    return tasks().filter((t) => d.done.includes(t.id)).reduce((a, t) => a + Number(t.minutes), 0);
+    const dl = doneList(dateStr);
+    return tasks().filter((t) => dl.includes(t.id)).reduce((a, t) => a + Number(t.minutes), 0);
   }
   function weekMinutes() {
     let total = 0;
     const d = new Date();
     for (let i = 0; i < 7; i++) { total += minutesFor(todayStr(d)); d.setDate(d.getDate() - 1); }
     return total;
+  }
+
+  // ---------- honesty check ----------
+  function honestyFlags() {
+    const flags = [];
+    const t = todayStr();
+    S.schedule.forEach((w) => w.topics.forEach((name, i) => {
+      if (!data.topics[weekKey(w, i)] || !MATH_PAGES.includes(w.page) || isMixed(name)) return;
+      const st = topicStats(name);
+      if (st.n < 10) flags.push(["Ticked without proof", "“" + name + "” is marked done, but only " + st.n + " questions are logged (needs 10+)."]);
+      else if (st.und && st.und <= 2) flags.push(["Low understanding", "“" + name + "” is marked done, but you rated your understanding " + st.und + "/5."]);
+      else if (st.acc < 70) flags.push(["Done but weak", "“" + name + "” is marked done with only " + st.acc + "% accuracy."]);
+    }));
+    S.schedule.forEach((w) => {
+      if (w.to < t && w.to >= (data.trackFrom || "") && MATH_PAGES.includes(w.page)) w.topics.forEach((name) => { if (!isMixed(name) && topicStats(name).n === 0) flags.push(["Skipped topic", "“" + name + "” (" + w.from + " → " + w.to + ") has no practice logged."]); });
+    });
+    const pd = planDays();
+    const recent = pd.missed.filter((d) => dayDiff(d, t) <= 7);
+    if (recent.length) flags.push(["Missed days", plural(recent.length, "day") + " without study in the last week: " + recent.join(", ") + "."]);
+    const last7 = pr().filter((p) => dayDiff(p.date, t) < 7);
+    const s7 = sumQ(last7), h7 = sumQ(last7.filter((p) => p.diff === "Hard"));
+    if (t >= "2027-01-13" && s7.n >= 40 && pct(h7.n, s7.n) < 40) flags.push(["Avoiding Hard", "Only " + pct(h7.n, s7.n) + "% of this week's questions were Hard. Phase 2 needs mostly Hard."]);
+    const lowUnd = last7.filter((p) => Number(p.und) <= 2).map((p) => p.topic);
+    Array.from(new Set(lowUnd)).forEach((n) => flags.push(["Didn't understand", "You rated “" + n + "” 2/5 or lower this week. Relearn it before more practice."]));
+    const stale = data.errors.filter((e) => (e.reviews || 0) === 0 && dayDiff(e.date, t) >= 7).length;
+    if (stale) flags.push(["Mistakes not redone", plural(stale, "mistake") + " logged over a week ago " + (stale === 1 ? "has" : "have") + " never been redone."]);
+    const due = wordStats().due;
+    if (due >= 40) flags.push(["Review backlog", due + " vocabulary reviews are piling up."]);
+    const wk = sectionStats(null, 7), needWk = (cfg().dailyMathQ + cfg().dailyRwQ) * Math.min(7, pd.passed + 1);
+    if (pd.passed >= 3 && wk.n < needWk * 0.6) flags.push(["Low volume", "Only " + wk.n + " questions in the last 7 days (target ~" + needWk + ")."]);
+    return flags;
+  }
+
+  // ---------- readiness ----------
+  function readiness() {
+    const c = cfg();
+    const t = topicList();
+    const mt = t.filter((x) => x.section === "Math");
+    const pageOf = (name) => { const e = (S.englishTopics || []).find((x) => x.t === name); return e ? e.page : ""; };
+    const recentHard = (sec) => {
+      const l = pr().filter((p) => p.section === sec && p.diff === "Hard").sort((a, b) => (a.date < b.date ? 1 : -1));
+      let n = 0, cc = 0;
+      for (const p of l) { if (n >= 100) break; n += Number(p.n); cc += Number(p.correct); }
+      return { n, acc: pct(cc, n) };
+    };
+    const accItem = (group, label, q, minN, need) => {
+      const acc = q.acc != null ? q.acc : pct(q.c, q.n);
+      const prog = Math.min(1, acc / need) * Math.min(1, q.n / minN);
+      return { group, label, prog, detail: q.n ? acc + "% on " + q.n + " questions" + (q.n < minN ? " (need " + minN + "+)" : "") : "nothing logged yet" };
+    };
+    const mDone = mt.filter((x) => topicStats(x.name).n >= 30).length;
+    const mh = recentHard("Math"), rh = recentHard("R&W");
+    const gram = sumQ(pr().filter((p) => pageOf(p.topic) === "grammar"));
+    const expr = sumQ(pr().filter((p) => pageOf(p.topic) === "transitions"));
+    const ws = wordStats();
+    const fcs = formulaCards(), fm = fcs.filter((x) => isMastered(x.id)).length;
+    const sc = sortedScores(), ls = sc[sc.length - 1], last2 = sc.slice(-2);
+    const pd = planDays();
+    const redone = data.errors.filter((e) => (e.reviews || 0) >= 2).length;
+    const slips = data.errors.slice(-20).filter((e) => /slip|Misread/.test(e.type)).length;
+    const items = [
+      { group: "Math", label: "Every Math topic has 30+ questions", prog: mDone / mt.length, detail: mDone + " / " + mt.length + " topics" },
+      accItem("Math", "Hard Math accuracy ≥ 85% (last 100 Hard)", { n: mh.n, acc: mh.acc }, 50, 85),
+      { group: "Math", label: "Careless mistakes near zero (last 20 errors)", prog: data.errors.length >= 5 ? 1 - slips / 20 : 0, detail: data.errors.length >= 5 ? slips + " of your last 20 mistakes were slips or misreads" : "log more mistakes to measure" },
+      { group: "Math", label: "Math test score ≥ " + c.target.math, prog: ls ? Math.min(1, (ls.math - 200) / (c.target.math - 200)) : 0, detail: ls ? "latest " + ls.math : "no test yet" },
+      accItem("R&W", "Grammar accuracy ≥ 95%", gram, 100, 95),
+      accItem("R&W", "Transitions & synthesis ≥ 95%", expr, 60, 95),
+      accItem("R&W", "Hard R&W accuracy ≥ 78% (last 100 Hard)", { n: rh.n, acc: rh.acc }, 50, 78),
+      { group: "R&W", label: "300 words mastered", prog: Math.min(1, ws.mastered / 300), detail: ws.mastered + " mastered · " + ws.started + " started" },
+      { group: "R&W", label: "R&W test score ≥ " + c.target.rw, prog: ls ? Math.min(1, (ls.rw - 200) / (c.target.rw - 200)) : 0, detail: ls ? "latest " + ls.rw : "no test yet" },
+      { group: "General", label: "Formula cards mastered ≥ 90%", prog: Math.min(1, pct(fm, fcs.length) / 90), detail: fm + " / " + fcs.length + " mastered" },
+      { group: "General", label: "Studied on ≥ 85% of days", prog: pd.passed ? Math.min(1, pct(pd.studied, pd.passed) / 85) : 0, detail: pd.studied + " of " + pd.passed + " days (" + pct(pd.studied, pd.passed) + "%)" },
+      { group: "General", label: "Every mistake redone 2+ times", prog: data.errors.length ? redone / data.errors.length : 0, detail: redone + " / " + data.errors.length + " mistakes" },
+      { group: "General", label: "Last two full tests ≥ " + c.target.total, prog: last2.filter((x) => x.total >= c.target.total).length / 2, detail: last2.length ? last2.map((x) => x.total).join(", ") : "no tests yet" }
+    ];
+    const overall = Math.round((items.reduce((a, x) => a + x.prog, 0) / items.length) * 100);
+    return { items, overall };
   }
 
   // ---------- scores ----------
@@ -177,13 +337,16 @@
   // ---------- header & nav ----------
   function renderHeader() {
     const c = cfg();
-    $("#targetPill").textContent = "Target " + c.target.total + "+";
+    $("#targetPill").textContent = "Target " + c.target.total + (c.stretch ? "–" + c.stretch.total : "+");
     const d = daysLeft();
     $("#countdown").innerHTML = d >= 0 ? "<b>" + d + "</b> days to the test" : "Test day has passed";
   }
   const homePage = { id: "dashboard", group: "Home", title: "Dashboard" };
   const planPage = { id: "studyplan", group: "Plan", title: "Study plan (tracker)" };
+  const readyPage = { id: "readiness", group: "Plan", title: "Readiness check" };
   const extraPages = [
+    { id: "practice", group: "Practice", title: "Practice log" },
+    { id: "mastery", group: "Practice", title: "Topic mastery" },
     { id: "vocab", group: "Practice", title: "Vocabulary trainer" },
     { id: "flashcards", group: "Practice", title: "Formula flashcards" },
     { id: "errors", group: "Practice", title: "Error log" },
@@ -196,7 +359,7 @@
   function allPages() {
     const secs = S.sections.slice();
     const i = secs.findIndex((s) => s.group === "Plan");
-    secs.splice(i < 0 ? 0 : i + 1, 0, planPage);
+    secs.splice(i < 0 ? 0 : i + 1, 0, planPage, readyPage);
     return [homePage].concat(secs).concat(extraPages);
   }
   function renderNav(active) {
@@ -212,13 +375,33 @@
   }
 
   // ---------- pages ----------
+  function practiceForm(formId, defTopic, compact) {
+    const groups = {};
+    topicList().forEach((x) => { (groups[x.section + " — " + x.domain] = groups[x.section + " — " + x.domain] || []).push(x.name); });
+    groups["Mixed"] = ["Mixed Math", "Mixed R&W"];
+    const opts = Object.keys(groups).map((g) => '<optgroup label="' + esc(g) + '">' + groups[g].map((n) => '<option' + (n === defTopic ? " selected" : "") + ">" + esc(n) + "</option>").join("") + "</optgroup>").join("");
+    return '<form class="row" id="' + formId + '">' +
+      '<label class="f wide2">Topic<select name="topic" required>' + opts + "</select></label>" +
+      '<label class="f">Difficulty<select name="diff"><option>Easy</option><option selected>Medium</option><option>Hard</option><option>Mixed</option></select></label>' +
+      '<label class="f">Questions<input type="number" name="n" min="1" max="200" required></label>' +
+      '<label class="f">Correct<input type="number" name="correct" min="0" max="200" required></label>' +
+      '<label class="f">Minutes<input type="number" name="minutes" min="1" max="300"></label>' +
+      '<label class="f">Understanding<select name="und"><option value="5">5 — could teach it</option><option value="4">4 — clear</option><option value="3" selected>3 — mostly</option><option value="2">2 — shaky</option><option value="1">1 — lost</option></select></label>' +
+      (compact ? "" : '<label class="f">Source<select name="source"><option>Question Bank</option><option>Khan Academy</option><option>Bluebook</option><option>Other</option></select></label>' +
+        '<label class="f">Date<input type="date" name="date" value="' + todayStr() + '"></label>' +
+        '<label class="f wide">Note (optional)<input name="note" placeholder="what was hard?"></label>') +
+      '<div><button class="btn" type="submit">Log practice</button></div>' +
+      '<div class="form-err" id="' + formId + 'Err"></div></form>';
+  }
+
   function pageDashboard() {
     const c = cfg();
     const t = todayStr();
-    const done = (data.daily[t] && data.daily[t].done) || [];
+    snapshotToday();
+    const done = doneList(t);
     const ls = latestScore();
     const cur = ls ? ls.total : c.startScore;
-    const pct = Math.max(0, Math.min(100, ((cur - c.startScore) / (c.target.total - c.startScore)) * 100));
+    const pctT = Math.max(0, Math.min(100, ((cur - c.startScore) / (c.target.total - c.startScore)) * 100));
     const totalMin = tasks().reduce((a, x) => a + Number(x.minutes), 0);
     const tt = todayTopic();
     const en = todayEnglish();
@@ -227,6 +410,11 @@
     const newW = todaysNewWords().length;
     const fq = formulaQueue().length;
     const pp = planProgress();
+    const pd = planDays();
+    const tm = sumQ(onDate(t, "Math")), tr = sumQ(onDate(t, "R&W"));
+    const all = sectionStats(null), wk = sectionStats(null, 7);
+    const flags = honestyFlags();
+    const rdy = readiness();
 
     let status;
     if (ls) {
@@ -238,22 +426,27 @@
       status = '<span class="tag">No test yet</span> Take a Bluebook practice test and add the score to see whether you are on track.';
     }
 
-    const taskHtml = tasks().map((x) =>
-      '<label class="task' + (done.includes(x.id) ? " done" : "") + '"><input type="checkbox" data-task="' + esc(x.id) + '"' +
-      (done.includes(x.id) ? " checked" : "") + "><span>" + esc(x.label) + '</span><span class="min">' + x.minutes + " min</span></label>"
-    ).join("");
+    const taskHtml = tasks().map((x) => {
+      const auto = AUTO_IDS.includes(x.id) ? autoTask(x.id, t) : null;
+      const isDone = done.includes(x.id);
+      return '<label class="task' + (isDone ? " done" : "") + (auto ? " auto" : "") + '"><input type="checkbox" ' + (auto ? "disabled" : 'data-task="' + esc(x.id) + '"') + (isDone ? " checked" : "") + "><span>" + esc(x.label) +
+        (auto ? '<span class="auto-info">auto · ' + esc(auto.info) + "</span>" : "") + '</span><span class="min">' + x.minutes + " min</span></label>";
+    }).join("");
 
     const review = data.errors.slice().sort((a, b) => (a.reviews || 0) - (b.reviews || 0) || (a.date < b.date ? -1 : 1)).slice(0, 2);
     const reviewHtml = review.length
-      ? review.map((e) => '<div class="list-item"><div class="meta">' + esc(e.section) + " · " + esc(e.topic) + " · reviewed " + plural(e.reviews || 0, "time") + "</div><div>" + esc(e.question) +
+      ? review.map((e) => '<div class="list-item"><div class="meta">' + esc(e.section) + " · " + esc(e.topic) + " · redone " + plural(e.reviews || 0, "time") + "</div><div>" + esc(e.question) +
         '</div><div class="muted">Next time: ' + esc(e.fix || "—") + '</div><button class="btn ghost small" data-review="' + esc(e.id) + '">Solved it again ✓</button></div>').join("")
       : '<div class="muted">Your error log is empty. Log every mistake — it is the fastest way to raise your score.</div>';
 
     const quick = (S.quickLinks || []).map((l) => '<a class="btn ghost" target="_blank" rel="noopener" href="' + esc(l.url) + '">' + esc(l.label) + " ↗</a>").join("");
     const topicDone = tt && data.topics[weekKey(tt.week, tt.idx)];
+    const bar = (v, max) => '<div class="bar"><div style="width:' + Math.min(100, Math.round((v / max) * 100)) + '%"></div></div>';
+    const defTopic = tt && MATH_PAGES.includes(tt.week.page) && !isMixed(tt.topic) ? tt.topic : (en ? en.t : "");
 
     return (
-      "<h1>Hello, " + esc(c.name) + "</h1>" +
+      '<h1>Hello, ' + esc(c.name) + '</h1>' +
+      '<div class="daybar"><div><b>Day ' + pd.dayN + "</b> of " + pd.total + '</div><div><b>' + pd.left + '</b> days left</div><div>Studied <b>' + pd.studied + " / " + pd.passed + "</b> days (" + pct(pd.studied, pd.passed) + '%)</div><div class="' + (pd.missed.length ? "warn" : "") + '">Missed <b>' + pd.missed.length + '</b></div><div>Streak <b>' + plural(streak(), "day") + '</b></div><div>Readiness <b>' + rdy.overall + "%</b></div></div>" +
       '<div class="today">' +
         '<div class="today-box"><div class="today-label">Today\'s Math topic' + (tt ? " · Day " + tt.day : "") + "</div>" +
           (tt ? '<div class="today-topic">' + esc(tt.topic) + '</div><div class="today-links"><a href="#' + esc(tt.week.page) + '">Open ' + esc(pageTitle(tt.week.page)) + ' →</a>' +
@@ -263,24 +456,104 @@
           (en ? '<div class="today-topic">' + esc(en.t) + '</div><div class="today-links"><a href="#' + esc(en.page) + '">Open ' + esc(pageTitle(en.page)) + " →</a></div>" : "") + "</div>" +
         '<div class="today-box"><div class="today-label">Today\'s reading</div><div class="today-topic">' + esc(rd.type) + '</div><div class="today-links">' +
           rd.links.map((l) => '<a target="_blank" rel="noopener" href="' + esc(l[1]) + '">' + esc(l[0]) + " ↗</a>").join(" · ") + "</div></div>" +
-        '<div class="today-box"><div class="today-label">Today\'s vocabulary</div><div class="today-topic">' + plural(newW, "new word") + " · " + ws.due + ' due</div><div class="today-links"><a href="#vocab">Open trainer →</a> · <a href="#flashcards">' + plural(fq, "formula card") + " due</a></div></div>" +
+        '<div class="today-box"><div class="today-label">Today\'s vocabulary</div><div class="today-topic">' + plural(newW, "new word") + " · " + ws.due + ' due</div><div class="today-links"><a href="#vocab">Open trainer →</a> · <a href="#flashcards">' + plural(fq, "formula card") + " left</a></div></div>" +
       "</div>" +
+      '<div class="card"><div class="week-head"><b>Log practice</b><span class="muted">Every set you do goes here — it powers every number in the hub.</span></div>' +
+        '<div class="grid two" style="margin:10px 0">' +
+          '<div><div class="muted">Math today: <b>' + tm.n + " / " + c.dailyMathQ + "</b> questions · " + pct(tm.c, tm.n) + "% correct</div>" + bar(tm.n, c.dailyMathQ) + "</div>" +
+          '<div><div class="muted">R&W today: <b>' + tr.n + " / " + c.dailyRwQ + "</b> questions · " + pct(tr.c, tr.n) + "% correct</div>" + bar(tr.n, c.dailyRwQ) + "</div>" +
+        "</div>" + practiceForm("quickPractice", defTopic, true) + "</div>" +
+      (flags.length
+        ? '<div class="card flagcard"><b>Honesty check</b> <span class="muted">(' + plural(flags.length, "issue") + ")</span>" + flags.map((f) => '<div class="flag"><span class="tag">' + esc(f[0]) + "</span> " + esc(f[1]) + "</div>").join("") + "</div>"
+        : '<div class="card"><b>Honesty check</b> <span class="tag good">All clear</span> <span class="muted">No skipped topics, fake ticks, or missed days.</span></div>') +
+      '<div class="card"><b>Today\'s checklist</b> <span class="muted">(' + t + " · " + minutesFor(t) + " / " + totalMin + ' min · items marked "auto" tick themselves from what you log)</span>' + taskHtml + "</div>" +
       '<div class="actions" style="margin-bottom:16px">' + quick + "</div>" +
       '<div class="grid">' +
-        '<div class="stat"><div class="label">Days to the test</div><div class="value">' + Math.max(0, daysLeft()) + '</div><div class="sub">' + esc(c.examDate) + "</div></div>" +
         '<div class="stat"><div class="label">Latest score</div><div class="value">' + cur + '</div><div class="sub">' + (ls ? "Math " + esc(ls.math) + " · R&W " + esc(ls.rw) : "Starting score") + "</div></div>" +
-        '<div class="stat"><div class="label">Streak</div><div class="value">' + plural(streak(), "day") + '</div><div class="sub">full checklist completed</div></div>' +
+        '<div class="stat"><div class="label">Questions practiced</div><div class="value">' + all.n + '</div><div class="sub">' + pct(all.c, all.n) + "% correct · " + wk.n + " this week</div></div>" +
         '<div class="stat"><div class="label">Last 7 days</div><div class="value">' + (weekMinutes() / 60).toFixed(1) + ' h</div><div class="sub">target ' + ((totalMin * 7) / 60).toFixed(0) + " h</div></div>" +
         '<div class="stat"><div class="label">Words mastered</div><div class="value">' + ws.mastered + '</div><div class="sub">of ' + ws.total + " · " + ws.started + " started</div></div>" +
-        '<div class="stat"><div class="label">Study plan</div><div class="value">' + Math.round((pp.done / pp.total) * 100) + '%</div><div class="sub">' + pp.done + " / " + pp.total + " topics done</div></div>" +
+        '<div class="stat"><div class="label">Study plan</div><div class="value">' + Math.round((pp.done / pp.total) * 100) + '%</div><div class="sub">' + pp.done + " / " + pp.total + " topics ticked</div></div>" +
+        '<div class="stat"><div class="label">Mistakes logged</div><div class="value">' + data.errors.length + '</div><div class="sub">' + data.errors.filter((e) => (e.reviews || 0) >= 2).length + " redone 2+ times</div></div>" +
       "</div>" +
-      '<div class="card"><b>Today\'s checklist</b> <span class="muted">(' + t + " · " + minutesFor(t) + " / " + totalMin + " min)</span>" + taskHtml + "</div>" +
-      '<div class="card"><b>Progress toward your target</b> <span class="muted">(' + c.startScore + " → " + c.target.total + ")</span>" +
-        '<div class="bar" style="margin-top:8px"><div style="width:' + pct.toFixed(0) + '%"></div></div>' +
-        '<div class="muted" style="margin-top:6px">' + Math.max(0, c.target.total - cur) + " points to go · today the plan expects ~" + expectedAt(t) + "</div>" +
+      '<div class="card"><b>Progress toward your target</b> <span class="muted">(' + c.startScore + " → " + c.target.total + (c.stretch ? "–" + c.stretch.total : "") + ")</span>" +
+        '<div class="bar" style="margin-top:8px"><div style="width:' + pctT.toFixed(0) + '%"></div></div>' +
+        '<div class="muted" style="margin-top:6px">' + Math.max(0, c.target.total - cur) + " points to go · today the plan expects ~" + expectedAt(t) + ' · <a href="#readiness">Readiness check →</a></div>' +
         '<div style="margin-top:8px">' + status + "</div></div>" +
       '<div class="card"><b>Redo today (from your error log)</b>' + reviewHtml + "</div>"
     );
+  }
+
+  function pagePractice() {
+    const t = todayStr();
+    // 21-day chart
+    const days = [];
+    for (let i = 20; i >= 0; i--) days.push(addDays(t, -i));
+    const vals = days.map((d) => ({ d, m: sumQ(onDate(d, "Math")).n, r: sumQ(onDate(d, "R&W")).n }));
+    const max = Math.max(cfg().dailyMathQ + cfg().dailyRwQ, ...vals.map((v) => v.m + v.r));
+    const W = 640, H = 180, L = 30, B = 22, bw = (W - L) / days.length;
+    const Y = (v) => (H - B) - (v / max) * (H - B - 10);
+    let g = '<line class="target-l" x1="' + L + '" y1="' + Y(cfg().dailyMathQ + cfg().dailyRwQ) + '" x2="' + W + '" y2="' + Y(cfg().dailyMathQ + cfg().dailyRwQ) + '"/>';
+    vals.forEach((v, i) => {
+      const x = L + i * bw + 2, w = bw - 4;
+      if (v.m) g += '<rect class="bar-m" x="' + x + '" y="' + Y(v.m) + '" width="' + w + '" height="' + (H - B - Y(v.m)) + '"><title>' + v.d + ": Math " + v.m + "</title></rect>";
+      if (v.r) g += '<rect class="bar-r" x="' + x + '" y="' + Y(v.m + v.r) + '" width="' + w + '" height="' + (Y(v.m) - Y(v.m + v.r)) + '"><title>' + v.d + ": R&W " + v.r + "</title></rect>";
+      if (!v.m && !v.r && v.d < t && v.d >= cfg().startDate) g += '<text class="ax miss" x="' + (x + w / 2) + '" y="' + (H - B - 4) + '" text-anchor="middle">×</text>';
+      if (i % 5 === 0 || i === vals.length - 1) g += '<text class="ax" x="' + (x + w / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + v.d.slice(5) + "</text>";
+    });
+    g += '<text class="ax" x="' + (L - 4) + '" y="' + (Y(max) + 4) + '" text-anchor="end">' + max + "</text>";
+    const chart = '<svg viewBox="0 0 ' + W + " " + H + '" class="chart">' + g + '</svg><div class="legend"><span><i class="lg score"></i>Math</span><span><i class="lg rw"></i>R&W</span><span><i class="lg target"></i>Daily target</span><span>× = missed day</span></div>';
+
+    const m = sectionStats("Math"), r = sectionStats("R&W");
+    const byDiff = ["Easy", "Medium", "Hard"].map((d) => { const q = sumQ(pr().filter((p) => p.diff === d)); return '<div class="stat"><div class="label">' + d + '</div><div class="value">' + pct(q.c, q.n) + '%</div><div class="sub">' + q.n + " questions</div></div>"; }).join("");
+    const list = [...pr()].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0)).slice(0, 60).map((p) =>
+      "<tr><td>" + esc(p.date) + "</td><td>" + esc(p.section) + "</td><td>" + esc(p.topic) + "</td><td>" + esc(p.diff) + "</td><td>" + p.correct + "/" + p.n + " (" + pct(p.correct, p.n) + "%)</td><td>" + esc(p.minutes || "—") + "</td><td>" + esc(p.und) + "/5</td><td>" +
+      '<button class="btn ghost small" data-del="practice:' + esc(p.id) + '">Delete</button></td></tr>').join("");
+    return "<h1>Practice log</h1>" +
+      '<p class="muted">Log every set right after you finish it. Be honest — the numbers only help if they are real.</p>' +
+      '<div class="card">' + practiceForm("practiceForm", "", false) + "</div>" +
+      '<div class="grid">' +
+        '<div class="stat"><div class="label">Math total</div><div class="value">' + m.n + '</div><div class="sub">' + pct(m.c, m.n) + "% correct · " + Math.round(m.m / 60) + " h</div></div>" +
+        '<div class="stat"><div class="label">R&W total</div><div class="value">' + r.n + '</div><div class="sub">' + pct(r.c, r.n) + "% correct · " + Math.round(r.m / 60) + " h</div></div>" + byDiff +
+      "</div>" +
+      '<div class="card"><b>Last 21 days</b>' + chart + "</div>" +
+      (list ? '<div class="card md"><table><tr><th>Date</th><th>Section</th><th>Topic</th><th>Level</th><th>Score</th><th>Min</th><th>Und.</th><th></th></tr>' + list + "</table></div>" : '<div class="card muted">No practice logged yet.</div>');
+  }
+
+  function pageMastery() {
+    const t = todayStr();
+    const ticked = {};
+    S.schedule.forEach((w) => w.topics.forEach((n, i) => { if (data.topics[weekKey(w, i)]) ticked[n] = true; }));
+    const groups = {};
+    topicList().forEach((x) => { (groups[x.section + " — " + x.domain] = groups[x.section + " — " + x.domain] || []).push(x); });
+    const counts = { "Not started": 0, Practicing: 0, Weak: 0, Solid: 0, Mastered: 0 };
+    const html = Object.keys(groups).map((g) => {
+      const rows = groups[g].map((x) => {
+        const st = topicStats(x.name);
+        const [label, cls] = topicStatus(st);
+        counts[label]++;
+        const fading = st.last && dayDiff(st.last, t) > 14 && (label === "Solid" || label === "Mastered");
+        const warn = ticked[x.name] && st.n < 10 ? ' <span class="tag">ticked, no proof</span>' : "";
+        return "<tr><td>" + esc(x.name) + warn + "</td><td>" + st.n + "</td><td>" + (st.n ? st.acc + "%" : "—") + "</td><td>" + (st.hn ? st.hacc + "% (" + st.hn + ")" : "—") + "</td><td>" + (st.und ? st.und + "/5" : "—") + "</td><td>" + (st.last ? esc(st.last) + (fading ? ' <span class="tag">fading</span>' : "") : "—") +
+          '</td><td><span class="tag ' + cls + '">' + label + "</span></td></tr>";
+      }).join("");
+      return '<div class="card md"><b>' + esc(g) + '</b><table><tr><th>Topic</th><th>Questions</th><th>Accuracy</th><th>Hard</th><th>Understanding</th><th>Last practiced</th><th>Status</th></tr>' + rows + "</table></div>";
+    }).join("");
+    const total = topicList().length;
+    return "<h1>Topic mastery</h1>" +
+      '<p class="muted">Built only from your Practice log. <b>Solid</b> = 15+ questions at 80%+. <b>Mastered</b> = 30+ questions at 85%+ and 10+ Hard at 80%+. <b>Weak</b> = under 70%. <b>Fading</b> = not practiced for 14+ days.</p>' +
+      '<div class="grid">' + Object.keys(counts).map((k) => '<div class="stat"><div class="label">' + k + '</div><div class="value">' + counts[k] + '</div><div class="sub">of ' + total + " topics</div></div>").join("") + "</div>" + html;
+  }
+
+  function pageReadiness() {
+    const c = cfg();
+    const r = readiness();
+    const groups = ["Math", "R&W", "General"];
+    return "<h1>Readiness check</h1>" +
+      '<p class="muted">Live progress toward Math ' + c.target.math + (c.stretch ? "–" + c.stretch.math : "+") + " and R&W " + c.target.rw + (c.stretch ? "–" + c.stretch.rw : "+") + '. Each bar fills only from real logged work. What each requirement means: <a href="#target">Target 770+ / 700+</a>.</p>' +
+      '<div class="card"><b>Overall readiness: ' + r.overall + '%</b><div class="bar" style="margin-top:8px"><div style="width:' + r.overall + '%"></div></div></div>' +
+      groups.map((g) => '<div class="card"><b>' + g + "</b>" + r.items.filter((x) => x.group === g).map((x) =>
+        '<div class="req"><div class="req-head"><span>' + (x.prog >= 1 ? "✅ " : "") + esc(x.label) + '</span><span class="muted">' + esc(x.detail) + '</span></div><div class="bar"><div style="width:' + Math.round(x.prog * 100) + '%"></div></div></div>').join("") + "</div>").join("");
   }
 
   function pageStudyPlan() {
@@ -291,8 +564,13 @@
       const d = w.topics.filter((x, i) => data.topics[weekKey(w, i)]).length;
       const cur = t >= w.from && t <= w.to;
       const past = t > w.to;
-      const items = w.topics.map((x, i) =>
-        '<label class="task' + (data.topics[weekKey(w, i)] ? " done" : "") + '"><input type="checkbox" data-topic="' + esc(weekKey(w, i)) + '"' + (data.topics[weekKey(w, i)] ? " checked" : "") + "><span>" + esc(x) + "</span></label>").join("");
+      const items = w.topics.map((x, i) => {
+        const st = topicStats(x), ticked = data.topics[weekKey(w, i)];
+        const counted = MATH_PAGES.includes(w.page) && !isMixed(x);
+        const ev = counted ? (st.n ? st.n + " q · " + st.acc + "%" : "no practice") : "";
+        const warn = counted && ticked && st.n < 10 ? ' <span class="tag">no proof</span>' : "";
+        return '<label class="task' + (ticked ? " done" : "") + '"><input type="checkbox" data-topic="' + esc(weekKey(w, i)) + '"' + (ticked ? " checked" : "") + "><span>" + esc(x) + warn + '</span><span class="min">' + ev + "</span></label>";
+      }).join("");
       return '<div class="card' + (cur ? " current" : "") + '"><div class="week-head"><b>' + esc(w.focus) + "</b>" +
         (cur ? ' <span class="tag good">This week</span>' : past && d < n ? ' <span class="tag">Unfinished</span>' : "") +
         '<span class="muted" style="margin-left:auto">' + esc(w.from) + " → " + esc(w.to) + " · " + d + "/" + n + "</span></div>" +
@@ -489,7 +767,7 @@
   }
 
   function pageTracker() {
-    const days = Object.keys(data.daily).filter((k) => data.daily[k].done && data.daily[k].done.length).sort().reverse();
+    const days = Array.from(new Set(Object.keys(data.daily).concat(pr().map((p) => p.date)))).filter((k) => doneList(k).length || onDate(k).length).sort().reverse();
     // 8-week heatmap
     const cells = [];
     const d = new Date(); d.setDate(d.getDate() - 55);
@@ -501,8 +779,10 @@
     }
     const heat = '<div class="card"><b>Last 8 weeks</b><div class="heat">' + cells.join("") + '</div><div class="legend"><span><i class="hm l0"></i>0</span><span><i class="hm l1"></i>&lt;60 min</span><span><i class="hm l2"></i>60–99</span><span><i class="hm l3"></i>100+</span></div></div>';
     if (!days.length) return "<h1>Daily history</h1>" + heat + '<div class="card muted">No days recorded yet. Tick the Dashboard checklist and they will appear here.</div>';
-    const rows = days.map((k) => "<tr><td>" + k + "</td><td>" + data.daily[k].done.length + " / " + tasks().length + "</td><td>" + minutesFor(k) + " min</td><td>" + (dayDone(k) ? '<span class="tag good">Done</span>' : "") + "</td></tr>").join("");
-    return "<h1>Daily history</h1>" + heat + '<div class="card md"><table><tr><th>Date</th><th>Tasks</th><th>Time</th><th></th></tr>' + rows + "</table></div>";
+    const rows = days.map((k) => { const m = sumQ(onDate(k, "Math")), r = sumQ(onDate(k, "R&W")); return "<tr><td>" + k + "</td><td>" + doneList(k).length + " / " + tasks().length + "</td><td>" + m.n + " (" + pct(m.c, m.n) + "%)</td><td>" + r.n + " (" + pct(r.c, r.n) + "%)</td><td>" + minutesFor(k) + " min</td><td>" + (dayDone(k) ? '<span class="tag good">Done</span>' : "") + "</td></tr>"; }).join("");
+    const pd = planDays();
+    const missed = pd.missed.length ? '<div class="card"><b>Missed days (' + pd.missed.length + ')</b><div class="muted" style="margin-top:6px">' + pd.missed.join(" · ") + "</div></div>" : "";
+    return "<h1>Daily history</h1>" + heat + missed + '<div class="card md"><table><tr><th>Date</th><th>Checklist</th><th>Math q</th><th>R&W q</th><th>Time</th><th></th></tr>' + rows + "</table></div>";
   }
 
   function pageSettings() {
@@ -518,6 +798,8 @@
         '<label class="f">Target Math<input type="number" name="targetMath" value="' + c.target.math + '"></label>' +
         '<label class="f">Target R&W<input type="number" name="targetRw" value="' + c.target.rw + '"></label>' +
         '<label class="f">New words per day<input type="number" min="1" max="40" name="newWordsPerDay" value="' + c.newWordsPerDay + '"></label>' +
+        '<label class="f">Math questions per day<input type="number" min="1" max="100" name="dailyMathQ" value="' + c.dailyMathQ + '"></label>' +
+        '<label class="f">R&W questions per day<input type="number" min="1" max="100" name="dailyRwQ" value="' + c.dailyRwQ + '"></label>' +
         '<label class="f wide">Daily checklist — one task per line as "minutes | task"<textarea name="tasks" rows="8">' + esc(taskText) + "</textarea></label>" +
         '<div class="actions"><button class="btn" type="submit">Save</button><button class="btn ghost" type="button" id="resetSettings">Reset to defaults</button></div>' +
       '</form><p class="muted" id="settingsMsg"></p></div>';
@@ -525,7 +807,7 @@
 
   function pageBackup() {
     return "<h1>Backup / restore</h1>" +
-      '<div class="card"><p>Everything you enter (checklist, plan ticks, words, flashcard progress, error log, reading log, scores, settings) is saved only in <b>this browser</b>. Download a backup every week, and import it to move to another device.</p>' +
+      '<div class="card"><p>Everything you enter (practice log, checklist, plan ticks, words, flashcard progress, error log, reading log, scores, settings) is saved only in <b>this browser</b>. Download a backup every week, and import it to move to another device.</p>' +
       '<div class="actions"><button class="btn" id="exportBtn">Download backup</button>' +
       '<label class="btn ghost">Import backup<input type="file" id="importFile" accept=".json" style="display:none"></label></div>' +
       '<p class="muted" id="backupMsg"></p></div>';
@@ -551,7 +833,7 @@
     const sec = S.sections.find((s) => s.id === id);
     renderHeader();
     renderNav(id);
-    const pages = { studyplan: pageStudyPlan, vocab: pageVocab, flashcards: pageFlashcards, errors: pageErrors, reads: pageReads, scores: pageScores, tracker: pageTracker, settings: pageSettings, backup: pageBackup };
+    const pages = { studyplan: pageStudyPlan, readiness: pageReadiness, practice: pagePractice, mastery: pageMastery, vocab: pageVocab, flashcards: pageFlashcards, errors: pageErrors, reads: pageReads, scores: pageScores, tracker: pageTracker, settings: pageSettings, backup: pageBackup };
     $("#main").classList.remove("quiz");
     $("#main").innerHTML = sec ? md(sec.md) : (pages[id] || pageDashboard)();
     document.querySelectorAll('#main a[href^="http"]').forEach((a) => { a.target = "_blank"; a.rel = "noopener"; });
@@ -589,6 +871,24 @@
       data.vocab.push({ id, date: todayStr(), word: f.get("word"), meaning: f.get("meaning"), sentence: f.get("sentence") });
       data.srs["u:" + id] = { lvl: 0, due: addDays(todayStr(), 1), last: todayStr() };
       save(); rerender();
+    });
+    ["quickPractice", "practiceForm"].forEach((fid) => {
+      const pf = $("#" + fid);
+      if (!pf) return;
+      pf.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const f = new FormData(pf);
+        const n = Number(f.get("n")), cr = Number(f.get("correct"));
+        const err = $("#" + fid + "Err");
+        if (!(n > 0)) { err.textContent = "Enter how many questions you did."; return; }
+        if (cr > n) { err.textContent = "Correct cannot be more than the number of questions."; return; }
+        const topic = f.get("topic");
+        const tp = topicList().find((x) => x.name === topic);
+        const section = tp ? tp.section : /R&W/.test(topic) ? "R&W" : "Math";
+        data.practice.push({ id: uid(), date: f.get("date") || todayStr(), section, topic, diff: f.get("diff"), n, correct: cr, minutes: Number(f.get("minutes") || 0), und: Number(f.get("und")), source: f.get("source") || "Question Bank", note: f.get("note") || "" });
+        save(); rerender();
+      });
+      pf.addEventListener("input", () => { const err = $("#" + fid + "Err"); if (err) err.textContent = ""; });
     });
     const rf = $("#readForm");
     if (rf) addFrom(rf, "reads", (f) => ({ date: f.get("date"), type: f.get("type"), title: f.get("title"), url: f.get("url"), idea: f.get("idea") }));
@@ -636,9 +936,11 @@
       const f = new FormData(stf);
       const tl = String(f.get("tasks") || "").split("\n").map((l) => l.trim()).filter(Boolean).map((l, i) => {
         const m = l.match(/^(\d+)\s*\|\s*(.+)$/);
-        return m ? { id: "t" + i + "_" + m[2].slice(0, 12).replace(/\W/g, ""), minutes: Number(m[1]), label: m[2] } : { id: "t" + i, minutes: 10, label: l };
+        const label = m ? m[2] : l;
+        const prev = tasks().find((x) => x.label === label) || S.dailyTasks.find((x) => x.label === label);
+        return { id: prev ? prev.id : "t" + i + "_" + label.slice(0, 12).replace(/\W/g, ""), minutes: m ? Number(m[1]) : 10, label };
       });
-      data.settings = { name: f.get("name"), examDate: f.get("examDate"), startScore: f.get("startScore"), targetTotal: f.get("targetTotal"), targetMath: f.get("targetMath"), targetRw: f.get("targetRw"), newWordsPerDay: f.get("newWordsPerDay"), tasks: tl };
+      data.settings = { name: f.get("name"), examDate: f.get("examDate"), startScore: f.get("startScore"), targetTotal: f.get("targetTotal"), targetMath: f.get("targetMath"), targetRw: f.get("targetRw"), newWordsPerDay: f.get("newWordsPerDay"), dailyMathQ: f.get("dailyMathQ"), dailyRwQ: f.get("dailyRwQ"), tasks: tl };
       save(); rerender(); $("#settingsMsg").textContent = "Saved.";
     });
     const rs = $("#resetSettings");

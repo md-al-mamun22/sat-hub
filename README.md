@@ -16,6 +16,12 @@ Live: https://md-al-mamun22.github.io/sat-hub/
 | `marked.min.js` | Markdown library (works offline). Do not edit. |
 
 ## Features
+- **Practice log:** record every set (topic, difficulty, questions, correct, minutes, understanding 1–5). It powers every number in the hub.
+- **Accountability:** day X of Y, days left, days studied vs missed, streak, questions practiced, readiness %.
+- **Auto checklist:** Math, R&W, reading, error-log, vocabulary, and flashcard tasks tick themselves from real activity — they cannot be ticked by hand.
+- **Honesty check:** flags topics ticked without practice, skipped topics, missed days, low-understanding topics, avoided Hard questions, mistakes never redone, review backlogs, and low volume.
+- **Topic mastery:** questions, accuracy, Hard accuracy, understanding, last practiced, and status (Not started / Practicing / Weak / Solid / Mastered / fading) for every topic.
+- **Readiness check:** live progress against the requirements for Math 770–780 and R&W 700–740.
 - **Dashboard:** today's Math topic, English topic, reading type, and vocabulary; daily checklist; streak; on-track check against milestones; mistakes to redo
 - **Study plan:** every weekly topic with tick boxes and progress bars
 - **Formula cheat sheet:** all formulas with pictures; **Quiz mode** blurs formulas so you can test yourself
