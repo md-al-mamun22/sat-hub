@@ -331,3 +331,17 @@ a.task-link:hover .task-name { color: var(--accent); text-decoration: underline;
 .count-pill.ok { color: var(--good); background: var(--good-soft); }
 .count-pill:hover { filter: brightness(0.95); }
 @media (max-width: 760px) { .task { flex-wrap: wrap; } .count-pill { margin-left: 29px; } }
+
+/* ---------- clickable readiness ---------- */
+.req { padding: 10px 12px; margin: 6px -12px; border-radius: 10px; }
+.req:hover { background: var(--accent-soft); }
+.req-link { display: block; color: inherit; text-decoration: none; }
+.req-link:hover .req-label { color: var(--accent); text-decoration: underline; }
+.req-how { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.req-actions { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+
+/* sidebar column background runs the full page height */
+@media (min-width: 761px) {
+  .layout { background: linear-gradient(to right, var(--card) 250px, var(--border) 250px, var(--border) 251px, transparent 251px); }
+  .sidebar { border-right: none; background: transparent; }
+}

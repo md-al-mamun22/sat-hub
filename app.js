@@ -303,6 +303,25 @@
       { group: "General", label: "Every mistake redone 2+ times", prog: data.errors.length ? redone / data.errors.length : 0, detail: redone + " / " + data.errors.length + " mistakes" },
       { group: "General", label: "Last two full tests ≥ " + c.target.total, prog: last2.filter((x) => x.total >= c.target.total).length / 2, detail: last2.length ? last2.map((x) => x.total).join(", ") : "no tests yet" }
     ];
+    const QB = "https://satsuitequestionbank.collegeboard.org/";
+    const BB = "https://bluebook.collegeboard.org/students/practice";
+    const HOW = [
+      { href: "#mastery", btn: "Topic mastery", ext: QB, how: "Question Bank → SAT → Math → pick the topic's domain and skill. Log every set in Practice log under that topic. Topic mastery shows which topics are still under 30." },
+      { href: "#practice", btn: "Log practice", ext: QB, how: "Question Bank → SAT → Math → Difficulty: Hard. Log each set with Difficulty = Hard. Counts your most recent 100 Hard questions." },
+      { href: "#errors", btn: "Error log", how: "Log every missed question with its mistake type. 'Calculation slip' and 'Misread the question' should become rare — re-check every answer in Module 1." },
+      { href: "#scores", btn: "Add test score", ext: BB, how: "Take a full Bluebook practice test, then add the Math score on Test scores." },
+      { href: "#grammar", btn: "Grammar rules", ext: QB, how: "Question Bank → SAT → Reading and Writing → Standard English Conventions. Log it under a grammar topic (Sentence boundaries, Semicolons & colons, ...)." },
+      { href: "#transitions", btn: "Transitions notes", ext: QB, how: "Question Bank → SAT → Reading and Writing → Expression of Ideas. Log it under Transitions or Rhetorical synthesis." },
+      { href: "#practice", btn: "Log practice", ext: QB, how: "Question Bank → SAT → Reading and Writing → Information and Ideas or Craft and Structure → Difficulty: Hard. Log with Difficulty = Hard." },
+      { href: "#vocab", btn: "Vocabulary trainer", how: "Learn 10 new words a day and clear the due reviews. A word counts as mastered when it reaches the 15-day level." },
+      { href: "#scores", btn: "Add test score", ext: BB, how: "Take a full Bluebook practice test, then add the R&W score on Test scores." },
+      { href: "#concepts", btn: "Concept check", how: "For each topic: study the notes, explain it in your own words, and pass the 5-question concept quiz." },
+      { href: "#flashcards", btn: "Formula flashcards", how: "Do the due formula cards every day. A card counts as mastered at the 15-day level." },
+      { href: "#tracker", btn: "Daily history", how: "Log at least one practice set every day. Days without any logged study count as missed." },
+      { href: "#errors", btn: "Error log", how: "Redo each logged mistake and click 'Solved it again ✓'. Each one needs two redos." },
+      { href: "#scores", btn: "Test scores", ext: BB, how: "Take full Bluebook tests every two weeks (weekly in March) and add each score." }
+    ];
+    items.forEach((x, i) => Object.assign(x, HOW[i] || {}));
     const overall = Math.round((items.reduce((a, x) => a + x.prog, 0) / items.length) * 100);
     return { items, overall };
   }
@@ -648,8 +667,11 @@
     return "<h1>Readiness check</h1>" +
       '<p class="muted">Live progress toward Math ' + c.target.math + (c.stretch ? "–" + c.stretch.math : "+") + " and R&W " + c.target.rw + (c.stretch ? "–" + c.stretch.rw : "+") + '. Each bar fills only from real logged work. What each requirement means: <a href="#target">Target 770+ / 700+</a>.</p>' +
       '<div class="card"><b>Overall readiness: ' + r.overall + '%</b><div class="bar" style="margin-top:8px"><div style="width:' + r.overall + '%"></div></div></div>' +
+      '<p class="muted">Click any requirement to open the page where you work on it.</p>' +
       groups.map((g) => '<div class="card"><b>' + g + "</b>" + r.items.filter((x) => x.group === g).map((x) =>
-        '<div class="req"><div class="req-head"><span>' + (x.prog >= 1 ? "✅ " : "") + esc(x.label) + '</span><span class="muted">' + esc(x.detail) + '</span></div><div class="bar"><div style="width:' + Math.round(x.prog * 100) + '%"></div></div></div>').join("") + "</div>").join("");
+        '<div class="req"><a class="req-link" href="' + (x.href || "#readiness") + '"><div class="req-head"><span class="req-label">' + (x.prog >= 1 ? "✅ " : "") + esc(x.label) + ' →</span><span class="muted">' + esc(x.detail) + '</span></div><div class="bar"><div style="width:' + Math.round(x.prog * 100) + '%"></div></div>' +
+        (x.how ? '<div class="req-how"><b>How:</b> ' + esc(x.how) + "</div>" : "") + "</a>" +
+        '<div class="req-actions">' + (x.href ? '<a class="btn small" href="' + x.href + '">' + esc(x.btn || "Open") + " →</a>" : "") + (x.ext ? '<a class="btn ghost small" target="_blank" rel="noopener" href="' + x.ext + '">' + (x.ext.indexOf("bluebook") >= 0 ? "Bluebook" : "Question Bank") + " ↗</a>" : "") + "</div></div>").join("") + "</div>").join("");
   }
 
   function pageStudyPlan() {
