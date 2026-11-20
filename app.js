@@ -460,11 +460,29 @@
       status = '<span class="tag">No test yet</span> Take a Bluebook practice test and add the score to see whether you are on track.';
     }
 
+    const readsToday = data.reads.filter((r) => r.date === t).length;
+    const qT = sumQ(onDate(t)), wrongT = qT.n - qT.c, errT = data.errors.filter((e) => e.date === t).length;
+    const conceptTopic = tt && MATH_PAGES.includes(tt.week.page) && !isMixed(tt.topic) ? tt.topic : null;
+    // where each task takes you, and today's count for it
+    const TASK_INFO = {
+      recall: { href: "#flashcards", count: fq ? fq + " formula cards today" : "formulas done ✓" },
+      concept: { href: "#concepts", count: conceptTopic ? "Concept: " + conceptStatus(conceptTopic)[0] : "today's topic" },
+      mathq: { href: "#practice", count: tm.n + " / " + c.dailyMathQ + " questions" },
+      rwq: { href: "#practice", count: tr.n + " / " + c.dailyRwQ + " questions" },
+      reading: { href: "#reads", count: readsToday + " / 1 article · " + rd.type },
+      vocab: { href: "#vocab", count: newW + " new words · " + ws.due + " reviews" },
+      errors: { href: "#errors", count: qT.n ? errT + " logged · " + wrongT + " wrong today" : "log practice first" }
+    };
     const taskHtml = tasks().map((x) => {
       const auto = AUTO_IDS.includes(x.id) ? autoTask(x.id, t) : null;
       const isDone = done.includes(x.id);
-      return '<label class="task' + (isDone ? " done" : "") + (auto ? " auto" : "") + '"><input type="checkbox" ' + (auto ? "disabled" : 'data-task="' + esc(x.id) + '"') + (isDone ? " checked" : "") + "><span>" + esc(x.label) +
-        (auto ? '<span class="auto-info">auto · ' + esc(auto.info) + "</span>" : "") + '</span><span class="min">' + x.minutes + " min</span></label>";
+      const info = TASK_INFO[x.id];
+      const label = '<span class="task-name">' + esc(x.label) + "</span>" + (auto ? '<span class="auto-info">auto-ticks when done</span>' : "");
+      return '<div class="task' + (isDone ? " done" : "") + (auto ? " auto" : "") + '">' +
+        '<input type="checkbox" ' + (auto ? 'disabled title="Ticks itself when the work is logged"' : 'data-task="' + esc(x.id) + '"') + (isDone ? " checked" : "") + ">" +
+        (info ? '<a class="task-link" href="' + info.href + '">' + label + "</a>" : '<span class="task-link">' + label + "</span>") +
+        (info ? '<a class="count-pill' + ((x.id === "concept" ? conceptTopic && conceptClear(conceptTopic) : isDone) ? " ok" : "") + '" href="' + info.href + '">' + esc(info.count) + "</a>" : "") +
+        '<span class="min">' + x.minutes + " min</span></div>";
     }).join("");
 
     const review = data.errors.slice().sort((a, b) => (a.reviews || 0) - (b.reviews || 0) || (a.date < b.date ? -1 : 1)).slice(0, 2);
@@ -501,7 +519,7 @@
       (flags.length
         ? '<div class="card flagcard"><b>Honesty check</b> <span class="muted">(' + plural(flags.length, "issue") + ")</span>" + flags.map((f) => '<div class="flag"><span class="tag">' + esc(f[0]) + "</span> " + esc(f[1]) + "</div>").join("") + "</div>"
         : '<div class="card"><b>Honesty check</b> <span class="tag good">All clear</span> <span class="muted">No skipped topics, fake ticks, or missed days.</span></div>') +
-      '<div class="card"><b>Today\'s checklist</b> <span class="muted">(' + t + " · " + minutesFor(t) + " / " + totalMin + ' min · items marked "auto" tick themselves from what you log)</span>' + taskHtml + "</div>" +
+      '<div class="card"><b>Today\'s checklist</b> <span class="muted">(' + t + " · " + minutesFor(t) + " / " + totalMin + ' min · click a task to open it · "auto" items tick themselves)</span>' + taskHtml + "</div>" +
       '<div class="actions" style="margin-bottom:16px">' + quick + "</div>" +
       '<div class="grid">' +
         '<div class="stat"><div class="label">Latest score</div><div class="value">' + cur + '</div><div class="sub">' + (ls ? "Math " + esc(ls.math) + " · R&W " + esc(ls.rw) : "Starting score") + "</div></div>" +
