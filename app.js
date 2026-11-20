@@ -634,30 +634,72 @@
       (list ? '<div class="card md"><table><tr><th>Date</th><th>Section</th><th>Topic</th><th>Level</th><th>Score</th><th>Min</th><th>Und.</th><th></th></tr>' + list + "</table></div>" : '<div class="card muted">No practice logged yet.</div>');
   }
 
+  let ms = { filter: "" };
+  const topicHref = (name) => "#topic=" + encodeURIComponent(name);
   function pageMastery() {
     const t = todayStr();
     const ticked = {};
     S.schedule.forEach((w) => w.topics.forEach((n, i) => { if (data.topics[weekKey(w, i)]) ticked[n] = true; }));
     const groups = {};
-    topicList().forEach((x) => { (groups[x.section + " — " + x.domain] = groups[x.section + " — " + x.domain] || []).push(x); });
     const counts = { "Not started": 0, Practicing: 0, Weak: 0, Solid: 0, Mastered: 0 };
+    topicList().forEach((x) => {
+      const st = topicStats(x.name);
+      const status = topicStatus(st);
+      counts[status[0]]++;
+      if (ms.filter && ms.filter !== status[0]) return;
+      (groups[x.section + " — " + x.domain] = groups[x.section + " — " + x.domain] || []).push({ x, st, status });
+    });
+    const total = topicList().length;
     const html = Object.keys(groups).map((g) => {
-      const rows = groups[g].map((x) => {
-        const st = topicStats(x.name);
-        const [label, cls] = topicStatus(st);
-        counts[label]++;
+      const rows = groups[g].map(({ x, st, status }) => {
+        const [label, cls] = status;
         const fading = st.last && dayDiff(st.last, t) > 14 && (label === "Solid" || label === "Mastered");
         const warn = ticked[x.name] && st.n < 10 ? ' <span class="tag">ticked, no proof</span>' : "";
-        return "<tr><td>" + esc(x.name) + warn + "</td><td>" + st.n + "</td><td>" + (st.n ? st.acc + "%" : "—") + "</td><td>" + (st.hn ? st.hacc + "% (" + st.hn + ")" : "—") + "</td><td>" + (st.und ? st.und + "/5" : "—") + "</td><td>" + (st.last ? esc(st.last) + (fading ? ' <span class="tag">fading</span>' : "") : "—") +
-          "</td><td>" + (() => { const cs = conceptStatus(x.name); return '<span class="tag ' + (cs[1] === "clear" ? "good" : cs[1] === "none" ? "plain" : "") + '">' + cs[0] + "</span>"; })() +
-          '</td><td><span class="tag ' + cls + '">' + label + "</span></td></tr>";
+        const cs = conceptStatus(x.name);
+        return '<tr class="row-link" data-go="' + esc(topicHref(x.name)) + '"><td><a href="' + esc(topicHref(x.name)) + '">' + esc(x.name) + "</a>" + warn + "</td><td>" + st.n + "</td><td>" + (st.n ? st.acc + "%" : "—") + "</td><td>" + (st.hn ? st.hacc + "% (" + st.hn + ")" : "—") + "</td><td>" + (st.und ? st.und + "/5" : "—") + "</td><td>" + (st.last ? esc(st.last) + (fading ? ' <span class="tag">fading</span>' : "") : "—") +
+          '</td><td><span class="tag ' + (cs[1] === "clear" ? "good" : cs[1] === "none" ? "plain" : "") + '">' + cs[0] + '</span></td><td><span class="tag ' + cls + '">' + label + '</span></td><td class="go">→</td></tr>';
       }).join("");
-      return '<div class="card md"><b>' + esc(g) + '</b><table><tr><th>Topic</th><th>Questions</th><th>Accuracy</th><th>Hard</th><th>Understanding</th><th>Last practiced</th><th>Concept</th><th>Status</th></tr>' + rows + "</table></div>";
+      return '<div class="card md"><b>' + esc(g) + '</b><table><tr><th>Topic</th><th>Questions</th><th>Accuracy</th><th>Hard</th><th>Understanding</th><th>Last practiced</th><th>Concept</th><th>Status</th><th></th></tr>' + rows + "</table></div>";
     }).join("");
-    const total = topicList().length;
+    const statCard = (k) => '<button class="stat stat-btn' + (ms.filter === k ? " on" : "") + '" data-msfilter="' + k + '"><div class="label">' + k + '</div><div class="value">' + counts[k] + '</div><div class="sub">of ' + total + " topics · click to filter</div></button>";
     return "<h1>Topic mastery</h1>" +
-      '<p class="muted">Built only from your Practice log. <b>Solid</b> = 15+ questions at 80%+. <b>Mastered</b> = 30+ questions at 85%+ and 10+ Hard at 80%+. <b>Weak</b> = under 70%. <b>Fading</b> = not practiced for 14+ days.</p>' +
-      '<div class="grid">' + Object.keys(counts).map((k) => '<div class="stat"><div class="label">' + k + '</div><div class="value">' + counts[k] + '</div><div class="sub">of ' + total + " topics</div></div>").join("") + "</div>" + html;
+      '<p class="muted">Built only from your Practice log. <b>Solid</b> = 15+ questions at 80%+. <b>Mastered</b> = 30+ questions at 85%+ and 10+ Hard at 80%+. <b>Weak</b> = under 70%. <b>Fading</b> = not practiced for 14+ days. Click a topic to open it.</p>' +
+      '<div class="grid">' + Object.keys(counts).map(statCard).join("") + "</div>" +
+      (ms.filter ? '<div class="actions" style="margin-bottom:12px"><span class="muted">Showing <b>' + esc(ms.filter) + '</b> topics</span><button class="btn ghost small" data-msfilter="">Show all</button></div>' : "") +
+      (html || '<div class="card muted">No topics with this status.</div>');
+  }
+
+  function pageTopic(name) {
+    const x = topicList().find((t) => t.name === name);
+    if (!x) return '<h1>Topic not found</h1><p><a href="#mastery">← Back to Topic mastery</a></p>';
+    const st = topicStats(name);
+    const [label, cls] = topicStatus(st);
+    const sessions = pr().filter((p) => p.topic === name).sort((a, b) => (a.date < b.date ? 1 : -1));
+    const errs = data.errors.filter((e) => e.topic === name);
+    const ticks = S.schedule.find((w) => w.topics.includes(name));
+    const byDiff = ["Easy", "Medium", "Hard"].map((d) => { const q = sumQ(sessions.filter((p) => p.diff === d)); return '<div class="stat"><div class="label">' + d + '</div><div class="value">' + (q.n ? pct(q.c, q.n) + "%" : "—") + '</div><div class="sub">' + q.n + " questions</div></div>"; }).join("");
+    const next = !st.n ? "Start with the Concept check, then do 10–15 Easy/Medium questions." :
+      label === "Weak" ? "Accuracy is under 70%. Reread the notes, redo your mistakes for this topic, then do 10 Easy/Medium questions." :
+      label === "Practicing" ? "Keep going: reach 15+ questions at 80%+ to make it Solid." :
+      label === "Solid" ? "Move to Hard: do 10+ Hard questions at 80%+ to reach Mastered." : "Mastered. Revisit it every 2 weeks so it does not fade.";
+    return '<p><a href="#mastery">← Topic mastery</a></p>' +
+      "<h1>" + esc(name) + "</h1>" +
+      '<div class="actions" style="margin-bottom:14px"><span class="tag ' + cls + '">' + label + '</span><span class="muted">' + esc(x.section + " · " + x.domain) + (ticks ? " · planned " + esc(ticks.from) + " → " + esc(ticks.to) : "") + "</span></div>" +
+      '<div class="card"><b>Next step:</b> ' + esc(next) +
+        '<div class="actions" style="margin-top:10px"><a class="btn small" href="#' + esc(x.page) + '">Study notes →</a><a class="btn ghost small" target="_blank" rel="noopener" href="https://satsuitequestionbank.collegeboard.org/">Question Bank ↗</a><a class="btn ghost small" target="_blank" rel="noopener" href="https://satsuite.collegeboard.org/practice/khan-academy">Khan Academy ↗</a></div></div>' +
+      '<div class="grid">' +
+        '<div class="stat"><div class="label">Questions</div><div class="value">' + st.n + '</div><div class="sub">' + st.sessions + " sessions · " + st.minutes + " min</div></div>" +
+        '<div class="stat"><div class="label">Accuracy</div><div class="value">' + (st.n ? st.acc + "%" : "—") + '</div><div class="sub">all levels</div></div>' + byDiff +
+        '<div class="stat"><div class="label">Understanding</div><div class="value">' + (st.und ? st.und + "/5" : "—") + '</div><div class="sub">last rating</div></div>' +
+        '<div class="stat"><div class="label">Last practiced</div><div class="value" style="font-size:18px">' + (st.last || "—") + "</div></div>" +
+      "</div>" +
+      '<h2>Concept check</h2><div class="cgrid">' + conceptCard(x) + "</div>" +
+      '<h2>Log practice for this topic</h2><div class="card">' + practiceForm("topicPractice", name, false) + "</div>" +
+      "<h2>Sessions</h2>" + (sessions.length ? '<div class="card md"><table><tr><th>Date</th><th>Level</th><th>Score</th><th>Min</th><th>Und.</th><th>Source</th><th>Note</th><th></th></tr>' +
+        sessions.map((p) => "<tr><td>" + esc(p.date) + "</td><td>" + esc(p.diff) + "</td><td>" + p.correct + "/" + p.n + " (" + pct(p.correct, p.n) + "%)</td><td>" + esc(p.minutes || "—") + "</td><td>" + esc(p.und) + "/5</td><td>" + esc(p.source || "") + "</td><td>" + esc(p.note || "") + '</td><td><button class="btn ghost small" data-del="practice:' + esc(p.id) + '">Delete</button></td></tr>').join("") + "</table></div>"
+        : '<div class="card muted">No practice logged for this topic yet.</div>') +
+      "<h2>Mistakes on this topic</h2>" + (errs.length ? errs.map((e) => '<div class="list-item"><div class="meta">' + esc(e.date) + " · " + esc(e.type) + " · redone " + (e.reviews || 0) + "×</div><div>" + esc(e.question) + '</div><div class="muted">Next time: ' + esc(e.fix || "—") + '</div><button class="btn ghost small" data-review="' + esc(e.id) + '">Solved it again ✓</button></div>').join("")
+        : '<div class="card muted">No mistakes logged for this topic. <a href="#errors">Add one in the Error log →</a></div>');
   }
 
   function pageReadiness() {
@@ -947,13 +989,14 @@
 
   // ---------- router ----------
   function render() {
-    const id = (location.hash || "#dashboard").slice(1);
+    const id = decodeURIComponent((location.hash || "#dashboard").slice(1));
+    const topicName = id.startsWith("topic=") ? id.slice(6) : null;
     const sec = S.sections.find((s) => s.id === id);
     renderHeader();
-    renderNav(id);
+    renderNav(topicName ? "mastery" : id);
     const pages = { concepts: pageConcepts, studyplan: pageStudyPlan, readiness: pageReadiness, practice: pagePractice, mastery: pageMastery, vocab: pageVocab, flashcards: pageFlashcards, errors: pageErrors, reads: pageReads, scores: pageScores, tracker: pageTracker, settings: pageSettings, backup: pageBackup };
     $("#main").classList.remove("quiz");
-    $("#main").innerHTML = sec ? md(sec.md) : (pages[id] || pageDashboard)();
+    $("#main").innerHTML = topicName ? pageTopic(topicName) : sec ? md(sec.md) : (pages[id] || pageDashboard)();
     document.querySelectorAll('#main a[href^="http"]').forEach((a) => { a.target = "_blank"; a.rel = "noopener"; });
     if (sec) addQuizToggle();
     bind();
@@ -1017,7 +1060,9 @@
       const c = cget(n); c.quiz = { date: todayStr(), c: v, pass: v >= 4 }; updateCleared(n); save(); rerender();
     });
 
-    ["quickPractice", "practiceForm"].forEach((fid) => {
+    on("[data-msfilter]", "click", (b) => { ms.filter = b.dataset.msfilter; rerender(); });
+    document.querySelectorAll("tr.row-link").forEach((tr) => tr.addEventListener("click", (e) => { if (!e.target.closest("a,button")) location.hash = tr.dataset.go; }));
+    ["quickPractice", "practiceForm", "topicPractice"].forEach((fid) => {
       const pf = $("#" + fid);
       if (!pf) return;
       const sel = pf.querySelector("select[name=topic]");
