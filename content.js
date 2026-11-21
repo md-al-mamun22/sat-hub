@@ -49,7 +49,7 @@ window.SAT = {
     { from: "2026-11-18", to: "2026-11-24", focus: "Math: Geometry & Trigonometry", page: "geometry",
       topics: ["Lines, angles, triangle sum, similar triangles", "Pythagoras, 45-45-90, 30-60-90", "Trigonometry: SOH-CAH-TOA, sin x = cos(90° − x)", "Circles: circumference, area, arc, sector, radians", "Circle equation, completing the square, inscribed angles", "Area, volume, scaling", "Geometry mixed test + error log review"] },
     { from: "2026-11-25", to: "2026-12-08", focus: "Math: Problem Solving & Data Analysis", page: "psda",
-      topics: ["Ratios, rates, unit conversion", "Percent & percent change", "Mean, median, outliers", "Standard deviation & spread", "Probability & two-way tables", "Scatterplots, line of best fit, linear vs exponential", "Sampling & margin of error"] },
+      topics: ["Ratios, rates, unit conversion", "Percent & percent change", "Mean, median, outliers", "Standard deviation & spread", "Probability & two-way tables", "Scatterplots, line of best fit, linear vs exponential", "Sampling & margin of error", "Observational studies vs experiments", "Box plots, IQR & skew"] },
     { from: "2026-12-09", to: "2026-12-29", focus: "Math: Advanced Math", page: "advanced",
       topics: ["Exponent & radical rules", "Equivalent expressions (expand/factor)", "Quadratics: factoring", "Quadratic formula & discriminant", "Vertex form & parabola graphs", "Exponential growth/decay", "Function notation & transformations", "Polynomial zeros & factors", "Nonlinear systems (Desmos)", "Rational expressions", "Advanced Math mixed hard set"] },
     { from: "2026-12-30", to: "2027-01-12", focus: "Math: Algebra", page: "algebra",
@@ -135,6 +135,19 @@ window.SAT = {
     { q: "a² − b² = ?", a: "(a + b)(a − b)" },
     { q: "Compound interest formula?", a: "A = P(1 + r/n)^(nt)" },
     { q: "Remainder of p(x) ÷ (x − a)?", a: "p(a)" },
+    { q: "Radical equation: what must you always do at the end?", a: "Check every answer — squaring can create extraneous solutions" },
+    { q: "Rational equation: which x-values are not allowed?", a: "Any value that makes a denominator 0" },
+    { q: "Even vs odd power factor on a polynomial graph?", a: "(x − r)² touches the x-axis; (x − r) crosses it" },
+    { q: "Residual = ?", a: "Actual − predicted" },
+    { q: "What lets you claim cause and effect?", a: "Random assignment (an experiment)" },
+    { q: "What lets you generalize to a population?", a: "Random sampling from that population" },
+    { q: "IQR = ?", a: "Q3 − Q1" },
+    { q: "Skewed right: mean vs median?", a: "Mean > median" },
+    { q: "Triangle similarity shortcut?", a: "AA — two equal angles" },
+    { q: "Triangle inequality?", a: "Any side < sum of the other two" },
+    { q: "sin 30°, cos 30°?", a: "1/2, √3/2" },
+    { q: "sin 60°, cos 60°?", a: "√3/2, 1/2" },
+    { q: "sin 45° = cos 45° = ?", a: "√2/2" },
     { q: "Percent change?", a: "(new − old) / old × 100" },
     { q: "Which does an outlier affect more: mean or median?", a: "The mean" },
     { q: "Add the same number to every value: what happens to SD?", a: "It does not change" },
@@ -346,6 +359,10 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
   - If DE ∥ BC: AD/AB = AE/AC = DE/BC
   - **Trap:** use the whole side (AD/**AB**), not the pieces (AD/DB)
 
+- **Similarity:** AA (two equal angles) is enough. **Congruence:** SSS, SAS, ASA, AAS (not SSA)
+- **Triangle inequality:** any side < the sum of the other two
+- In a triangle, the **larger side is opposite the larger angle**
+
 ## 3. Right triangles
 [[vis:pythagoras,tri45,tri30]]
 
@@ -366,6 +383,13 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
 
 - **sin x = cos(90° − x)**. If sin A = cos B, then **A + B = 90°**.
 - Similar right triangles share the same sin, cos, and tan.
+- **tan θ = sin θ / cos θ**
+
+| Angle | sin | cos | tan |
+|---|---|---|---|
+| 30° (π/6) | 1/2 | √3/2 | 1/√3 |
+| 45° (π/4) | √2/2 | √2/2 | 1 |
+| 60° (π/3) | √3/2 | 1/2 | √3 |
 
 ## 5. Circles
 [[vis:circle,inscribed,circleeq]]
@@ -501,7 +525,20 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
 
 - **Line of best fit**: the slope is how much y changes per 1 unit of x
 - **Linear** = increases by the same **amount** each step. **Exponential** = increases by the same **percent/factor** each step.
+- **Residual** = actual y − predicted y (positive → the point is above the line)
 - **Sampling:** a random sample lets you generalize to the population it was drawn from — and only that population.
+
+## 6. Evaluating statistical claims (observational studies vs experiments)
+| Design | What you can conclude |
+|---|---|
+| **Random sampling** | results generalize to the whole population sampled |
+| **Random assignment** to treatment groups (experiment) | you can claim **cause and effect** |
+| **Observational study** (no random assignment) | only an **association**, never causation |
+
+## 7. Distributions
+- **Box plot:** min, Q1, median, Q3, max. **IQR = Q3 − Q1**
+- **Skewed right** (long tail to the right): mean > median. **Skewed left:** mean < median
+- Histograms and dot plots: find the median by counting to the middle value
 - A larger **margin of error** means less certainty. Larger samples reduce the margin of error.
 ` },
 
@@ -555,6 +592,13 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
   - f(x) + k → up k
   - f(x − h) → right h (the sign flips!)
   - −f(x) → reflect over the x-axis
+
+## 4a. Solving nonlinear equations
+- **Radical equations:** isolate the root, square both sides, then **check every answer** — squaring can create **extraneous** solutions
+- **Rational equations:** multiply by the common denominator; any value that makes a denominator **0** is not allowed
+- **Absolute value:** |A| = k → A = k or A = −k (no solution if k < 0)
+- **Exponential with the same base:** 2^(x+1) = 2^5 → x + 1 = 5
+- **Polynomial graphs:** a factor (x − r) gives a zero at x = r; an **even** power (x − r)² **touches** the x-axis, an **odd** power **crosses** it
 
 ## 4b. Special products (spot them instantly)
 | Pattern | Expands to |
@@ -614,6 +658,8 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
 ## 4. Inequalities
 - Multiplying or dividing by a negative **flips the sign**
 - On a graph: < or > uses a dashed line; ≤ or ≥ uses a solid line
+- **Two-variable inequality (y > mx + b):** shade above the line; y < mx + b → below. To check a point, **plug it in**.
+- **System of inequalities:** the solution is the region where all shadings overlap
 
 ## 5. Absolute value
 - |x − 3| = 5 → x − 3 = 5 or x − 3 = −5 → x = 8 or −2

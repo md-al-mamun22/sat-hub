@@ -841,7 +841,7 @@
     data.errors.forEach((e) => { byTopic[e.topic] = (byTopic[e.topic] || 0) + 1; byType[e.type] = (byType[e.type] || 0) + 1; });
     const weak = Object.keys(byTopic).sort((a, b) => byTopic[b] - byTopic[a]).slice(0, 6);
     const types = Object.keys(byType).sort((a, b) => byType[b] - byType[a]);
-    const typeAdvice = { "Didn't know the concept": "relearn the topic page before practicing", "Calculation slip": "slow down and check every step", "Misread the question": "underline what the question actually asks", "Ran out of time": "practice timed sets" };
+    const typeAdvice = { "Didn't know the concept": "relearn the topic page before practicing", "Calculation slip": "slow down and check every step", "Misread the question": "underline what the question actually asks", "Ran out of time": "practice timed sets", "Formula not in my notes": "add the formula to content.js (or tell Claude) so the hub has it" };
     return (
       "<h1>Error log</h1>" +
       (weak.length ? '<div class="card"><b>Your weak topics</b> <span class="muted">(most mistakes)</span><div style="margin-top:6px">' + weak.map((w) => '<span class="tag">' + esc(w) + " · " + byTopic[w] + "</span>").join(" ") + "</div>" +
@@ -850,7 +850,7 @@
         '<label class="f">Date<input type="date" name="date" value="' + todayStr() + '" required></label>' +
         '<label class="f">Section<select name="section"><option>Math</option><option>R&W</option></select></label>' +
         '<label class="f">Topic<input name="topic" list="topicList" placeholder="e.g. Similar triangles" required></label>' +
-        '<label class="f">Mistake type<select name="type"><option>Didn\'t know the concept</option><option>Calculation slip</option><option>Misread the question</option><option>Ran out of time</option></select></label>' +
+        '<label class="f">Mistake type<select name="type"><option>Didn\'t know the concept</option><option>Calculation slip</option><option>Misread the question</option><option>Ran out of time</option><option>Formula not in my notes</option></select></label>' +
         '<label class="f wide">Question (short)<textarea name="question" required></textarea></label>' +
         '<label class="f wide">Why I missed it<textarea name="why"></textarea></label>' +
         '<label class="f wide">What I will do next time<textarea name="fix"></textarea></label>' +
