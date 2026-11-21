@@ -180,6 +180,22 @@ window.SAT_VIS = {
     f: "more spread out = larger SD",
     tip: "No formula needed — just compare spreads."
   },
+  pyramid: {
+    title: "Height vs slant height",
+    svg: `<line class="s" x1="40" y1="125" x2="150" y2="125"/><line class="s" x1="150" y1="125" x2="200" y2="100"/><line class="s d" x1="200" y1="100" x2="90" y2="100"/><line class="s d" x1="90" y1="100" x2="40" y2="125"/>
+<line class="s" x1="120" y1="25" x2="40" y2="125"/><line class="s" x1="120" y1="25" x2="150" y2="125"/><line class="s" x1="120" y1="25" x2="200" y2="100"/><line class="s d" x1="120" y1="25" x2="90" y2="100"/>
+<line class="w d" x1="120" y1="25" x2="120" y2="112"/><line class="g" x1="120" y1="25" x2="95" y2="125"/><line class="s d" x1="120" y1="112" x2="95" y2="125"/>
+<text class="ta" x="125" y="78">h</text><text class="tg" x="90" y="72">l</text><text class="t sm" x="88" y="145">s/2</text><text class="t sm" x="172" y="125">s</text>`,
+    f: "h² + (s/2)² = l² · cone: h² + r² = l²",
+    tip: "h goes to the center; l goes down a face. Trap: l is usually a wrong choice."
+  },
+  surface: {
+    title: "Surface area",
+    svg: `<rect class="s" x="40" y="60" width="50" height="50"/><polygon class="w fa" points="40,60 90,60 65,25"/><polygon class="w fa" points="90,60 90,110 125,85"/><polygon class="w fa" points="40,110 90,110 65,145"/><polygon class="w fa" points="40,60 40,110 5,85"/>
+<text class="t sm" x="58" y="90">s²</text><text class="ta sm" x="134" y="60">base: s²</text><text class="ta sm" x="134" y="82">4 faces: 4 × ½sl</text><text class="ta sm" x="134" y="104">total: s² + 2sl</text>`,
+    f: "total = base + lateral · each face = ½ × s × l",
+    tip: "Cylinder 2πr² + 2πrh · cone πr² + πrl · sphere 4πr² · box 2(lw + lh + wh)."
+  },
   linexp: {
     title: "Linear vs exponential",
     svg: `<line class="s" x1="20" y1="145" x2="230" y2="145"/><line class="s" x1="30" y1="50" x2="30" y2="150"/>

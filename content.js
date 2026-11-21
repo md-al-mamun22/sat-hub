@@ -114,6 +114,27 @@ window.SAT = {
     { q: "Volume of a cone?", a: "⅓πr²h" },
     { q: "Volume of a sphere?", a: "(4/3)πr³" },
     { q: "If every length is multiplied by k, area and volume?", a: "Area × k², volume × k³" },
+    { q: "Square pyramid: height, slant height, half the side?", a: "h² + (s/2)² = l²" },
+    { q: "Cone: height, radius, slant height?", a: "h² + r² = l²" },
+    { q: "Surface area of a square pyramid?", a: "s² + 2sl (base + 4 triangles of ½·s·l)" },
+    { q: "Surface area of a cylinder?", a: "2πr² + 2πrh" },
+    { q: "Surface area of a cone?", a: "πr² + πrl" },
+    { q: "Surface area of a sphere?", a: "4πr²" },
+    { q: "Surface area of a box?", a: "2(lw + lh + wh)" },
+    { q: "Total surface area vs lateral area?", a: "Total = base(s) + lateral; lateral = sides only" },
+    { q: "Space diagonal of a box?", a: "√(l² + w² + h²)" },
+    { q: "Area of an equilateral triangle?", a: "(√3/4)s²" },
+    { q: "Sum of interior angles of an n-gon?", a: "(n − 2) × 180°" },
+    { q: "Sum of exterior angles of any polygon?", a: "360°" },
+    { q: "Inscribed angle on a diameter?", a: "90°" },
+    { q: "Distance formula?", a: "√((x₂ − x₁)² + (y₂ − y₁)²)" },
+    { q: "Midpoint formula?", a: "((x₁ + x₂)/2, (y₁ + y₂)/2)" },
+    { q: "Combined mean of two groups?", a: "(n₁m₁ + n₂m₂) ÷ (n₁ + n₂)" },
+    { q: "1 ft² = how many in²?", a: "144" },
+    { q: "(a + b)² = ?", a: "a² + 2ab + b²" },
+    { q: "a² − b² = ?", a: "(a + b)(a − b)" },
+    { q: "Compound interest formula?", a: "A = P(1 + r/n)^(nt)" },
+    { q: "Remainder of p(x) ÷ (x − a)?", a: "p(a)" },
     { q: "Percent change?", a: "(new − old) / old × 100" },
     { q: "Which does an outlier affect more: mean or median?", a: "The mean" },
     { q: "Add the same number to every value: what happens to SD?", a: "It does not change" },
@@ -292,7 +313,7 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
 > Every formula on one page, with a picture. Scan it for 2 minutes each morning. Turn on **Quiz mode** to hide the formulas and test yourself.
 
 ## Geometry & Trig
-[[vis:parallel,triangle,similar,pythagoras,tri45,tri30,soh,circle,inscribed,circleeq,volume,scaling]]
+[[vis:parallel,triangle,similar,pythagoras,tri45,tri30,soh,circle,inscribed,circleeq,volume,scaling,pyramid,surface]]
 
 ## Algebra
 [[vis:slope,parperp,systems]]
@@ -377,10 +398,53 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
 | Pyramid | ⅓ × base area × h |
 | Sphere | (4/3)πr³ |
 
+| Parallelogram | b × h (h is perpendicular, not the slanted side) |
+| Equilateral triangle | (√3 / 4) × s² |
+
 - A cone or pyramid is **⅓** of the matching cylinder or box
 - **Scaling:** length × k → area × **k²** → volume × **k³**
 
-> The SAT gives a reference sheet (area, volume, Pythagoras, special triangles), but knowing these by heart saves time.
+## 7. Surface area (NOT on the reference sheet — memorize)
+[[vis:pyramid,surface]]
+
+| Solid | Surface area |
+|---|---|
+| Box | 2(lw + lh + wh) |
+| Cube | 6s² |
+| Cylinder | 2πr² + 2πrh |
+| Cone | πr² + πrl (l = slant height) |
+| Sphere | 4πr² |
+| Square pyramid | s² + 4 × (½ × s × l) = **s² + 2sl** |
+
+- **Total surface area = base area(s) + lateral area.** Lateral area = the sides only.
+- Each lateral face of a square pyramid is a triangle: **½ × s × l**, where **l is the slant height** (height of the triangular face).
+
+## 8. Height vs slant height (the classic trap)
+- **Height (h)** goes from the apex straight down to the **center** of the base.
+- **Slant height (l)** goes from the apex down the middle of a **face** to the edge.
+- They form a right triangle with half the base side: **h² + (s/2)² = l²** (square pyramid) and **h² + r² = l²** (cone).
+- The answer choices almost always include the slant height as a wrong answer when the question asks for the height.
+
+**Worked example (pattern):** total surface area = 1,040 and lateral area = 640 for a right square pyramid. Find the height.
+1. Base area = 1,040 − 640 = 400 → s = 20
+2. One face = 640 ÷ 4 = 160 = ½ × 20 × l → **l = 16** (slant height — a trap answer)
+3. h² + 10² = 16² → h² = 156 → **h = √156 ≈ 12.5**
+
+## 9. More 3-D facts
+- Box space diagonal: **√(l² + w² + h²)**
+- Cube space diagonal: **s√3**; square diagonal: **s√2**
+
+## 10. Polygons
+- Sum of interior angles: **(n − 2) × 180°**
+- Each interior angle of a regular polygon: **(n − 2) × 180° ÷ n**
+- Sum of exterior angles of any polygon: **360°**
+- An inscribed angle that stands on a **diameter** is **90°**
+
+## 11. Coordinate geometry
+- **Distance:** √((x₂ − x₁)² + (y₂ − y₁)²) — this is just Pythagoras
+- **Midpoint:** ((x₁ + x₂)/2, (y₁ + y₂)/2)
+
+> The SAT reference sheet gives area, volume, Pythagoras, and special triangles. It does **not** give surface area, slant height, distance, midpoint, polygon angles, circle equations, or arc/sector formulas — those must be memorized.
 ` },
 
 /* ---------------------------------------------------------- */
@@ -418,8 +482,18 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
 - Adding the same number to every value changes the mean, **not the SD**
 - More spread-out data → larger SD
 
+## 3b. Averages that trip people up
+- **Combined mean:** (n₁ × mean₁ + n₂ × mean₂) ÷ (n₁ + n₂) — never just average the two means
+- **Total = mean × count.** To find a missing value: new total − old total.
+- **Weighted average:** Σ(value × weight) ÷ Σ(weights)
+
+## 3c. Rates and units
+- **distance = rate × time**; **density = mass ÷ volume**; **work rate:** 1/t₁ + 1/t₂ = 1/t_together
+- Squared units square the conversion: 1 ft = 12 in → **1 ft² = 144 in²**, **1 ft³ = 1,728 in³**
+
 ## 4. Probability
 - **P = favorable outcomes / total outcomes**
+- P(not A) = 1 − P(A)
 - Two-way tables: if the question says "**of those who...**", the denominator is only that group's total (conditional probability)
 
 ## 5. Data & graphs
@@ -482,6 +556,22 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
   - f(x − h) → right h (the sign flips!)
   - −f(x) → reflect over the x-axis
 
+## 4b. Special products (spot them instantly)
+| Pattern | Expands to |
+|---|---|
+| (a + b)² | a² + 2ab + b² |
+| (a − b)² | a² − 2ab + b² |
+| (a + b)(a − b) | a² − b² (difference of squares) |
+
+- **Completing the square:** x² + bx = (x + b/2)² − (b/2)²
+- **Composition:** f(g(x)) — work from the inside out
+- **Remainder theorem:** the remainder of p(x) ÷ (x − a) equals **p(a)**
+
+## 4c. Exponential models used on the SAT
+- **Compound interest:** A = P(1 + r/n)^(nt)
+- **Doubling every d years:** a × 2^(t/d); **half-life h:** a × (½)^(t/h)
+- Rewriting: a(1.2)^(t) per year = a(1.2^(1/12))^(12t) per month
+
 ## 5. Polynomials & equivalent expressions
 - If x = r is a zero, then **(x − r)** is a factor
 - Equivalent expressions: expand both, or graph both in Desmos and see if they match
@@ -519,6 +609,7 @@ Both sections are adaptive: you must earn the **harder Module 2** by doing very 
 | **Infinitely many** | both equations are the same line |
 
 - Solve by substitution, elimination, or **Desmos intersection**
+- For a₁x + b₁y = c₁ and a₂x + b₂y = c₂: **infinitely many** when a₁/a₂ = b₁/b₂ = c₁/c₂; **no solution** when a₁/a₂ = b₁/b₂ ≠ c₁/c₂
 
 ## 4. Inequalities
 - Multiplying or dividing by a negative **flips the sign**
